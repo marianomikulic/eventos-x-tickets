@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos X - Venta Oficial</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <style>
+        :root {
+            --azul-acento: #3b82f6;
+            --verde-exito: #10b981;
+            --negro-fondo: #0a0a0a;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%); 
+            color: white;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px; 
+        }
+
+        .contenedor { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(12px);
+            padding: 50px 40px; 
+            border-radius: 28px; 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
+            width: 100%; 
+            max-width: 420px; 
+            text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 { font-size: 32px; margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase; }
+        h1 span { color: var(--azul-acento); font-weight: 800; }
+        .subtitulo { color: #94a3b8; margin-bottom: 30px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;}
+
+        .grupo-input { margin-bottom: 22px; text-align: left; }
+        label { display: block; margin-bottom: 8px; color: #cbd5e1; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 14px; 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            border-radius: 14px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--azul-acento);
+            outline: none;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .btn-accion { 
+            background: var(--azul-acento); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            width: 100%; 
+            border-radius: 14px; 
+            font-size: 17px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-accion:hover { 
+            background-color: #2563eb; 
+            transform: translateY(-2px);
+        }
+
+        /* DISEÑO DE LA RECOMENDACIÓN LEGAL */
+        .disclaimer {
+            margin-top: 15px;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.4;
+            padding: 0 10px;
+        }
+
+        /* ÉXITO */
+        #mensaje-exito { display: none; }
+        h2.exito-titulo { font-size: 36px; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; }
+        p.exito-mensaje { 
+            color: var(--verde-exito); 
+            font-size: 18px;
+            font-weight: 600;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #qrcode, .id-ticket { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor">
+        <div id="seccion-formulario">
+            <h1>EVENTOS <span>X</span></h1>
+            <p class="subtitulo">Registro Premium de Entradas</p>
+            
+            <form id="formularioCompra">
+                <div class="grupo-input">
+                    <label>Nombre</label>
+                    <input type="text" id="nombre" placeholder="Nombre" maxlength="16" required 
+                           oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
+                </div>
+
+                <div class="grupo-input">
+                    <label>Apellido</label>
+                    <input type="text" id="apellido" placeholder="Apellido" maxlength="16" required 
+                           oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
+                </div>
+
+                <div class="grupo-input">
+                    <label>DNI</label>
+                    <input type="text" id="dni" placeholder="Sin puntos ni guiones" maxlength="8" required 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+
+                <div class="grupo-input">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="tu@email.com" required>
+                </div>
+                
+                <div class="grupo-input">
+                    <label>Tipo de Entrada</label>
+                    <select id="tipoEntrada" required>
+                        <option value="GENERAL">General ($15.000)</option>
+                        <option value="VIP">VIP ($25.000)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-accion" id="btnAccion">Obtener Entrada</button>
+                
+                <p class="disclaimer">
+                    Al comprar, aceptás los términos de permanencia y política de devolución.
+                </p>
+            </form>
+        </div>
+
+        <div id="mensaje-exito">
+            <h2 class="exito-titulo">¡Compra Exitosa!</h2>
+            <p class="exito-mensaje">
+                <span>✅</span>
+                El QR ya llegó a tu casilla de mail.
+            </p>
+            <div id="qrcode"></div>
+            <p class="id-ticket" id="id-ticket"></p>
+        </div>
+    </div>
+
+    <script>
+        const INFO_EVENTO = {
+            fecha: "Sábado 15 Ago 2026 @ 9:00 pm",
+            direccion: "Club Ciudad de Buenos Aires, Av. del Libertador 7501, CABA"
+        };
+
+        const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        emailjs.init("fTAOcJXUAi8-UKPu2");
+
+        document.getElementById('formularioCompra').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnAccion');
+            btn.disabled = true;
+            btn.innerText = "PROCESANDO...";
+
+            const n = document.getElementById('nombre').value.trim();
+            const a = document.getElementById('apellido').value.trim();
+            const d = document.getElementById('dni').value.trim();
+            const m = document.getElementById('email').value.trim();
+            const tipo = document.getElementById('tipoEntrada').value;
+            const precio = tipo === "VIP" ? "$25.000" : "$15.000";
+
+            try {
+                const { data, error } = await client.from('entradas').insert([{ 
+                    nombre: n, apellido: a, dni: d, email: m 
+                }]).select().single();
+                
+                if (error) {
+                    if (error.code === '23505') throw new Error("Este DNI ya está registrado.");
+                    throw new Error(error.message);
+                }
+
+                document.getElementById('seccion-formulario').style.display = 'none';
+                document.getElementById('mensaje-exito').style.display = 'block';
+                document.getElementById('id-ticket').innerText = data.id;
+
+                await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
+                    to_email: m,
+                    nombre: n + " " + a,
+                    id_ticket: data.id,
+                    precio: precio,
+                    tipo: tipo,
+                    direccion: INFO_EVENTO.direccion,
+                    fecha_evento: INFO_EVENTO.fecha,
+                    qr_link: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data.id}`
+                });
+
+            } catch (err) {
+                alert("Aviso: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "OBTENER ENTRADA";
+            }
+        });
+    </script>
+</body>
+</html>
