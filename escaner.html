@@ -9,105 +9,67 @@
     <style>
         :root { --azul: #3b82f6; --rojo: #ef4444; --verde: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; text-align: center; }
-        
-        /* Pantalla de Login */
         #login-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-        .input-pin { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; font-size: 24px; border-radius: 12px; width: 100%; max-width: 200px; text-align: center; margin-bottom: 20px; letter-spacing: 5px; }
-        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-
-        /* Scanner */
+        .input-pin { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; font-size: 16px; border-radius: 12px; width: 100%; max-width: 280px; text-align: center; margin-bottom: 20px; }
+        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         #reader { width: 100%; max-width: 500px; margin: 0 auto; }
         .header { padding: 20px; background: #111; border-bottom: 1px solid #222; }
         h1 span { color: var(--azul); }
-
-        /* Resultado */
-        #resultado { 
-            position: fixed; bottom: 0; left: 0; right: 0; height: 50%; 
-            background: #161616; border-radius: 30px 30px 0 0; padding: 30px; 
-            display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
-        }
+        #resultado { position: fixed; bottom: 0; left: 0; right: 0; height: 50%; background: #161616; border-radius: 30px 30px 0 0; padding: 30px; display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.8); }
         .btn-next { background: #333; color: white; border: none; padding: 15px 40px; border-radius: 12px; margin-top: 20px; font-weight: bold; }
-        
-        .flash-ok { animation: flashG 0.5s; }
-        .flash-err { animation: flashR 0.5s; }
-        @keyframes flashG { from { background: var(--verde); } to { background: #000; } }
-        @keyframes flashR { from { background: var(--rojo); } to { background: #000; } }
     </style>
 </head>
 <body>
-
     <div id="login-screen">
         <h1 style="margin-bottom: 30px;">STAFF <span>X</span></h1>
-        <input type="password" id="pinInput" class="input-pin" placeholder="PIN" maxlength="4">
-        <button class="btn-pin" onclick="checkPin()">INGRESAR</button>
+        <input type="password" id="pinInput" class="input-pin" placeholder="Ingresá la clave compleja">
+        <button class="btn-pin" onclick="checkPin()">Acceder</button>
     </div>
-
-    <div class="header">
-        <h1>EVENTOS <span>X</span> | SCAN</h1>
-    </div>
-
+    <div class="header"><h1>EVENTOS <span>X</span> | SCAN</h1></div>
     <div id="reader"></div>
-
     <div id="resultado">
         <div id="res-icono" style="font-size: 60px;"></div>
         <div id="res-titulo" style="font-size: 24px; font-weight: 800; margin: 15px 0;"></div>
         <div id="res-info" style="font-size: 20px; font-weight: bold;"></div>
         <div id="res-dni" style="color: #94a3b8; margin-top: 5px;"></div>
-        <button class="btn-next" onclick="cerrarResultado()">SIGUIENTE ESCANEO</button>
+        <button class="btn-next" onclick="cerrarResultado()">SIGUIENTE</button>
     </div>
 
     <script>
-        const PIN_CORRECTO = "7a9t5!2jg_!"; // Cambialo por el que quieras
+        // ESTA ES TU NUEVA CLAVE COMPLEJA
+        const PIN_CORRECTO = "7a9t5!2jg_!"; 
+        
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        let escaneando = true;
 
         function checkPin() {
             if(document.getElementById('pinInput').value === PIN_CORRECTO) {
                 document.getElementById('login-screen').style.display = 'none';
                 startScanner();
-            } else {
-                alert("PIN INCORRECTO");
-            }
+            } else { alert("CLAVE INCORRECTA"); }
         }
 
         async function onScanSuccess(decodedText) {
-            if (!escaneando) return;
-            escaneando = false;
-
-            try {
-                const { data: entrada, error } = await client.from('entradas').select('*').eq('id', decodedText).single();
-
-                if (error || !entrada) {
-                    mostrarPopup("ERROR", "TICKET INEXISTENTE", "❌", "#7f1d1d", "flash-err");
-                } else if (entrada.ingresado) {
-                    mostrarPopup("YA INGRESÓ", `${entrada.nombre} - ${new Date(entrada.fecha_ingreso).toLocaleTimeString()}`, "⚠️", "#7c2d12", "flash-err");
-                } else {
-                    await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', decodedText);
-                    mostrarPopup("ACCESO OK", `${entrada.nombre} ${entrada.apellido}`, "✅", "#064e3b", "flash-ok", `DNI: ${entrada.dni}`);
-                }
-            } catch (e) { alert("Error de red"); escaneando = true; }
+            const { data: entrada, error } = await client.from('entradas').select('*').eq('id', decodedText).single();
+            if (error || !entrada) { mostrarPopup("ERROR", "TICKET INEXISTENTE", "❌", "#7f1d1d"); }
+            else if (entrada.ingresado) { mostrarPopup("YA INGRESÓ", entrada.nombre, "⚠️", "#7c2d12"); }
+            else {
+                await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', decodedText);
+                mostrarPopup("ACCESO OK", `${entrada.nombre} ${entrada.apellido}`, "✅", "#064e3b", `DNI: ${entrada.dni}`);
+            }
         }
 
-        function mostrarPopup(tit, info, ico, bg, flash, dni="") {
-            document.body.classList.add(flash);
+        function mostrarPopup(tit, info, ico, bg, dni="") {
             const res = document.getElementById('resultado');
-            res.style.display = 'block';
-            res.style.background = bg;
+            res.style.display = 'block'; res.style.background = bg;
             document.getElementById('res-icono').innerText = ico;
             document.getElementById('res-titulo').innerText = tit;
             document.getElementById('res-info').innerText = info;
             document.getElementById('res-dni').innerText = dni;
-            setTimeout(() => document.body.classList.remove(flash), 500);
         }
 
-        function cerrarResultado() {
-            document.getElementById('resultado').style.display = 'none';
-            escaneando = true;
-        }
-
+        function cerrarResultado() { document.getElementById('resultado').style.display = 'none'; }
         function startScanner() {
             const html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
