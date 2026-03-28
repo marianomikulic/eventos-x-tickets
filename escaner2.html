@@ -3,136 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eventos X - Control de Acceso</title>
+    <title>Eventos X - Scan Staff</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; text-align: center; overflow: hidden; }
-        .header { padding: 20px; background: #161616; border-bottom: 1px solid #333; }
-        h1 span { color: #3b82f6; }
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; background: #000; }
+        :root { --azul: #3b82f6; --rojo: #ef4444; --verde: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; text-align: center; }
         
-        /* Panel de Resultado */
+        /* Pantalla de Login */
+        #login-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .input-pin { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; font-size: 24px; border-radius: 12px; width: 100%; max-width: 200px; text-align: center; margin-bottom: 20px; letter-spacing: 5px; }
+        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        /* Scanner */
+        #reader { width: 100%; max-width: 500px; margin: 0 auto; }
+        .header { padding: 20px; background: #111; border-bottom: 1px solid #222; }
+        h1 span { color: var(--azul); }
+
+        /* Resultado */
         #resultado { 
-            position: fixed; bottom: 0; left: 0; right: 0; height: 40%; 
-            background: #161616; border-radius: 30px 30px 0 0; 
-            padding: 30px; display: none; transition: 0.3s;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-            z-index: 100;
+            position: fixed; bottom: 0; left: 0; right: 0; height: 50%; 
+            background: #161616; border-radius: 30px 30px 0 0; padding: 30px; 
+            display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
         }
-        .btn-cerrar { background: #333; color: white; border: none; padding: 10px 30px; border-radius: 10px; margin-top: 20px; cursor: pointer; }
+        .btn-next { background: #333; color: white; border: none; padding: 15px 40px; border-radius: 12px; margin-top: 20px; font-weight: bold; }
         
-        /* Estados */
-        .status-ok { color: #10b981; }
-        .status-error { color: #ef4444; }
-        .flash-ok { animation: flashGreen 0.5s; }
-        .flash-error { animation: flashRed 0.5s; }
-        
-        @keyframes flashGreen { from { background: #10b981; } to { background: #000; } }
-        @keyframes flashRed { from { background: #ef4444; } to { background: #000; } }
-        
-        .info-asistente { font-size: 20px; margin: 10px 0; font-weight: bold; }
-        .dni-asistente { color: #94a3b8; font-size: 16px; margin-bottom: 20px; }
+        .flash-ok { animation: flashG 0.5s; }
+        .flash-err { animation: flashR 0.5s; }
+        @keyframes flashG { from { background: var(--verde); } to { background: #000; } }
+        @keyframes flashR { from { background: var(--rojo); } to { background: #000; } }
     </style>
 </head>
 <body>
 
+    <div id="login-screen">
+        <h1 style="margin-bottom: 30px;">STAFF <span>X</span></h1>
+        <input type="password" id="pinInput" class="input-pin" placeholder="PIN" maxlength="4">
+        <button class="btn-pin" onclick="checkPin()">INGRESAR</button>
+    </div>
+
     <div class="header">
         <h1>EVENTOS <span>X</span> | SCAN</h1>
-        <p id="status-camera">Cargando cámara...</p>
     </div>
 
     <div id="reader"></div>
 
     <div id="resultado">
-        <div id="res-icono" style="font-size: 50px;"></div>
-        <div id="res-titulo" style="font-size: 24px; font-weight: 800; margin-top: 10px;"></div>
-        <div id="res-info" class="info-asistente"></div>
-        <div id="res-dni" class="dni-asistente"></div>
-        <button class="btn-cerrar" onclick="cerrarResultado()">SIGUIENTE</button>
+        <div id="res-icono" style="font-size: 60px;"></div>
+        <div id="res-titulo" style="font-size: 24px; font-weight: 800; margin: 15px 0;"></div>
+        <div id="res-info" style="font-size: 20px; font-weight: bold;"></div>
+        <div id="res-dni" style="color: #94a3b8; margin-top: 5px;"></div>
+        <button class="btn-next" onclick="cerrarResultado()">SIGUIENTE ESCANEO</button>
     </div>
 
     <script>
-        // CONFIGURACIÓN SUPABASE
+        const PIN_CORRECTO = "1234"; // Cambialo por el que quieras
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let escaneando = true;
 
-        async function onScanSuccess(decodedText) {
-            if (!escaneando) return;
-            escaneando = false; // Pausar escaneo para procesar
-
-            try {
-                // 1. Buscar el ticket en Supabase
-                const { data: entrada, error } = await client
-                    .from('entradas')
-                    .select('*')
-                    .eq('id', decodedText)
-                    .single();
-
-                if (error || !entrada) {
-                    mostrarError("TICKET NO ENCONTRADO", "Código inválido o inexistente.");
-                    return;
-                }
-
-                // 2. Verificar si ya ingresó
-                if (entrada.ingresado) {
-                    mostrarError("YA UTILIZADO", `${entrada.nombre} ingresó a las ${new Date(entrada.fecha_ingreso).toLocaleTimeString()}`);
-                } else {
-                    // 3. Registrar el ingreso
-                    await client
-                        .from('entradas')
-                        .update({ ingresado: true, fecha_ingreso: new Date().toISOString() })
-                        .eq('id', decodedText);
-                    
-                    mostrarExito(entrada);
-                }
-            } catch (e) {
-                mostrarError("ERROR DE SISTEMA", e.message);
+        function checkPin() {
+            if(document.getElementById('pinInput').value === PIN_CORRECTO) {
+                document.getElementById('login-screen').style.display = 'none';
+                startScanner();
+            } else {
+                alert("PIN INCORRECTO");
             }
         }
 
-        function mostrarExito(entrada) {
-            document.body.classList.add('flash-ok');
-            const res = document.getElementById('resultado');
-            res.style.display = 'block';
-            res.style.background = '#064e3b';
-            document.getElementById('res-icono').innerText = "✅";
-            document.getElementById('res-titulo').innerText = "ACCESO PERMITIDO";
-            document.getElementById('res-info').innerText = `${entrada.nombre} ${entrada.apellido}`;
-            document.getElementById('res-dni').innerText = `DNI: ${entrada.dni}`;
-            setTimeout(() => document.body.classList.remove('flash-ok'), 500);
+        async function onScanSuccess(decodedText) {
+            if (!escaneando) return;
+            escaneando = false;
+
+            try {
+                const { data: entrada, error } = await client.from('entradas').select('*').eq('id', decodedText).single();
+
+                if (error || !entrada) {
+                    mostrarPopup("ERROR", "TICKET INEXISTENTE", "❌", "#7f1d1d", "flash-err");
+                } else if (entrada.ingresado) {
+                    mostrarPopup("YA INGRESÓ", `${entrada.nombre} - ${new Date(entrada.fecha_ingreso).toLocaleTimeString()}`, "⚠️", "#7c2d12", "flash-err");
+                } else {
+                    await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', decodedText);
+                    mostrarPopup("ACCESO OK", `${entrada.nombre} ${entrada.apellido}`, "✅", "#064e3b", "flash-ok", `DNI: ${entrada.dni}`);
+                }
+            } catch (e) { alert("Error de red"); escaneando = true; }
         }
 
-        function mostrarError(titulo, detalle) {
-            document.body.classList.add('flash-error');
+        function mostrarPopup(tit, info, ico, bg, flash, dni="") {
+            document.body.classList.add(flash);
             const res = document.getElementById('resultado');
             res.style.display = 'block';
-            res.style.background = '#7f1d1d';
-            document.getElementById('res-icono').innerText = "❌";
-            document.getElementById('res-titulo').innerText = titulo;
-            document.getElementById('res-info').innerText = detalle;
-            document.getElementById('res-dni').innerText = "";
-            setTimeout(() => document.body.classList.remove('flash-error'), 500);
+            res.style.background = bg;
+            document.getElementById('res-icono').innerText = ico;
+            document.getElementById('res-titulo').innerText = tit;
+            document.getElementById('res-info').innerText = info;
+            document.getElementById('res-dni').innerText = dni;
+            setTimeout(() => document.body.classList.remove(flash), 500);
         }
 
         function cerrarResultado() {
             document.getElementById('resultado').style.display = 'none';
-            escaneando = true; // Volver a habilitar la cámara
+            escaneando = true;
         }
 
-        // Iniciar Cámara
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" }, // Cámara trasera
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess
-        ).catch(err => {
-            document.getElementById('status-camera').innerText = "Error: Permiso de cámara denegado.";
-        });
-
+        function startScanner() {
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+        }
     </script>
 </body>
 </html>
