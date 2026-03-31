@@ -147,7 +147,9 @@
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
         let idVentaActual = "";
-        const AFORO_MAXIMO = 1000; // Límite de entradas
+        
+        // El nuevo límite de seguridad (97%)
+        const AFORO_MAXIMO = 970; 
 
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
         function cerrarTC() { document.getElementById('modal-tc').style.display = 'none'; }
@@ -170,17 +172,14 @@
             btn.disabled = true;
 
             try {
-                // 1. VERIFICAR AFORO MÁXIMO
+                // Validación rápida en Frontend
                 const { count, error: countError } = await client
                     .from('entradas')
                     .select('*', { count: 'exact', head: true });
 
-                if (countError) throw new Error("Error al verificar disponibilidad.");
-
                 if (count >= AFORO_MAXIMO) {
                     alert("❌ ¡SOLD OUT! Se han agotado las entradas para este evento.");
                     btn.innerText = "Agotado";
-                    // Mantenemos el botón deshabilitado
                     return; 
                 }
 
@@ -198,17 +197,20 @@
                     id_venta: idVentaActual
                 };
 
-                // 2. INSERTAR EN BASE DE DATOS
+                // Inserción en Base de Datos (Acá actúa el candado SQL)
                 const { error } = await client.from('entradas').insert([datos]);
                 
                 if (error) {
+                    // Capturamos el error específico que programamos en Supabase
+                    if (error.message.includes('AFORO_AGOTADO')) {
+                        throw new Error("❌ ¡SOLD OUT! Se acaban de agotar las últimas entradas disponibles.");
+                    }
                     if (error.message.includes('dni_unico')) {
                         throw new Error("Este DNI ya tiene una entrada registrada. Por seguridad, solo se permite una entrada por persona.");
                     }
                     throw error;
                 }
 
-                // 3. ENVIAR EMAIL
                 await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
                     nombre_cliente: datos.nombre,
                     apellido_cliente: datos.apellido,
