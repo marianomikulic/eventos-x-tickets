@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --azul: #3b82f6; --rojo: #ef4444; --verde: #10b981; --fondo: #0a0a0a; --caja: #161616; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: white; margin: 0; text-align: center; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: white; margin: 0; text-align: center; overflow-x: hidden; }
         
         /* Login Staff */
         #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
@@ -16,24 +16,37 @@
         .input-pin:focus { outline: none; border-color: var(--azul); }
         .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; width: 100%; max-width: 280px; }
 
-        /* Lector */
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; border: none; }
-        .header { padding: 20px; background: #111; border-bottom: 1px solid #222; }
-        h1 { margin: 0; font-size: 24px; letter-spacing: 2px; }
+        /* Lector y Header */
+        .header { padding: 15px 20px; background: #111; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; font-size: 20px; letter-spacing: 2px; }
         h1 span { color: var(--azul); }
+        
+        /* Contador de Entradas */
+        .contador-badge { background: #222; border: 1px solid #444; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; color: var(--verde); letter-spacing: 1px; }
+
+        #reader { width: 100%; max-width: 500px; margin: 0 auto; border: none; }
+        
+        /* Buscador Manual de DNI */
+        .manual-search { background: var(--caja); padding: 20px; margin: 15px auto; width: 90%; max-width: 460px; border-radius: 15px; border: 1px solid #333; box-sizing: border-box; }
+        .manual-search p { margin: 0 0 10px 0; font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .search-row { display: flex; gap: 10px; }
+        .input-dni { flex: 1; background: #0a0a0a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; text-align: center; }
+        .input-dni:focus { outline: none; border-color: var(--azul); }
+        .btn-buscar { background: #333; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-buscar:hover { background: var(--azul); }
 
         /* Pantalla de Resultado */
-        #resultado { position: fixed; bottom: 0; left: 0; right: 0; height: 60%; background: var(--caja); border-radius: 30px 30px 0 0; padding: 30px 20px; display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #resultado { position: fixed; bottom: 0; left: 0; right: 0; height: 65%; background: var(--caja); border-radius: 30px 30px 0 0; padding: 30px 20px; display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.9); flex-direction: column; align-items: center; justify-content: center; }
         
         #res-icono { font-size: 60px; margin-bottom: 10px; }
-        #res-titulo { font-size: 26px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; }
+        #res-titulo { font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; text-align: center; }
         #res-tipo-entrada { display: inline-block; background: #fff; color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        #res-info { font-size: 20px; font-weight: 600; margin-bottom: 5px; }
-        #res-dni { color: #aaa; font-size: 16px; font-family: monospace; letter-spacing: 1px; }
+        #res-info { font-size: 20px; font-weight: 600; margin-bottom: 5px; text-align: center; }
+        #res-dni { color: #aaa; font-size: 16px; font-family: monospace; letter-spacing: 1px; text-align: center; }
         
         .btn-next { background: #111; color: white; border: 1px solid #333; padding: 18px 40px; border-radius: 12px; margin-top: 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; max-width: 300px; letter-spacing: 1px; }
         
-        /* Animaciones de Flash */
+        /* Animaciones */
         .flash-ok { animation: flashG 0.5s; }
         .flash-err { animation: flashR 0.5s; }
         @keyframes flashG { 0% { background: var(--verde); } 100% { background: var(--fondo); } }
@@ -49,13 +62,24 @@
         <button class="btn-pin" onclick="checkPin()">Entrar al Escáner</button>
     </div>
 
-    <div class="header" id="header-scan" style="display: none;">
-        <h1>EVENTOS <span>X</span> | SCAN</h1>
-    </div>
-    
-    <div id="reader"></div>
+    <div id="main-interface" style="display: none;">
+        <div class="header">
+            <h1>STAFF <span>X</span></h1>
+            <div class="contador-badge" id="txt-contador">0 / 0</div>
+        </div>
+        
+        <div id="reader"></div>
 
-    <div id="resultado" style="display: none;">
+        <div class="manual-search">
+            <p>¿Falla el QR? Búsqueda manual</p>
+            <div class="search-row">
+                <input type="number" id="dni-manual" class="input-dni" placeholder="Ingresar DNI">
+                <button class="btn-buscar" onclick="buscarPorDNI()">Buscar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultado">
         <div id="res-icono"></div>
         <div id="res-titulo"></div>
         <div id="res-tipo-entrada"></div>
@@ -65,48 +89,91 @@
     </div>
 
     <script>
-        const PIN_CORRECTO = "7a9t5!2jg_!"; // Mantenemos tu PIN de seguridad
+        const PIN_CORRECTO = "7a9t5!2jg_!"; 
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let escaneando = true;
 
+        // 1. INGRESO Y CONFIGURACIÓN INICIAL
         function checkPin() {
             if(document.getElementById('pinInput').value === PIN_CORRECTO) {
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('header-scan').style.display = 'block';
+                document.getElementById('main-interface').style.display = 'block';
+                actualizarContador(); // Cargar números al iniciar
                 startScanner();
             } else { 
                 alert("❌ CLAVE INCORRECTA"); 
             }
         }
 
+        // 2. ACTUALIZACIÓN DEL CONTADOR (Tiempo Real)
+        async function actualizarContador() {
+            try {
+                // Cuenta total de entradas vendidas
+                const { count: vendidas } = await client.from('entradas').select('*', { count: 'exact', head: true });
+                // Cuenta total de asistentes que ya ingresaron
+                const { count: ingresados } = await client.from('entradas').select('*', { count: 'exact', head: true }).eq('ingresado', true);
+                
+                document.getElementById('txt-contador').innerText = `${ingresados || 0} / ${vendidas || 0}`;
+            } catch (e) {
+                console.error("Error al actualizar contador", e);
+            }
+        }
+
+        // 3. BÚSQUEDA POR CÁMARA (CÓDIGO QR)
         async function onScanSuccess(decodedText) {
             if (!escaneando) return;
-            escaneando = false; 
-            
-            // Pausar el lector visualmente (opcional pero ayuda a que el staff sepa que leyó)
-            document.getElementById('reader').style.opacity = '0.3';
+            prepararValidacion();
 
             try {
                 const { data: entrada, error } = await client.from('entradas').select('*').eq('id', decodedText).single();
+                procesarResultado(entrada, error);
+            } catch (e) { errorConexion(); }
+        }
 
-                if (error || !entrada) {
-                    mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos", "❌", "#450a0a", "flash-err", "", "");
-                } else if (entrada.ingresado) {
-                    const hora = new Date(entrada.fecha_ingreso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    mostrarPopup("¡YA INGRESÓ!", `Ingresó a las ${hora} hs`, "⚠️", "#451a03", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
-                } else {
-                    // Actualizar Base de Datos (Acceso Concedido)
-                    await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', decodedText);
-                    mostrarPopup("ACCESO AUTORIZADO", `${entrada.nombre} ${entrada.apellido}`, "✅", "#022c22", "flash-ok", `DNI: ${entrada.dni}`, entrada.tipo_entrada);
-                }
-            } catch (e) { 
-                alert("⚠️ Error de conexión. Reintente.");
-                escaneando = true; 
-                document.getElementById('reader').style.opacity = '1';
+        // 4. BÚSQUEDA MANUAL (POR DNI)
+        async function buscarPorDNI() {
+            if (!escaneando) return;
+            const dniIngresado = document.getElementById('dni-manual').value;
+            if (dniIngresado.length < 7) { alert("Ingrese un DNI válido"); return; }
+            
+            prepararValidacion();
+
+            try {
+                // Busca la entrada exacta que coincida con ese DNI
+                const { data: entrada, error } = await client.from('entradas').select('*').eq('dni', dniIngresado).single();
+                procesarResultado(entrada, error);
+                document.getElementById('dni-manual').value = ""; // Limpiar campo
+            } catch (e) { errorConexion(); }
+        }
+
+        // 5. LÓGICA CENTRAL DE VALIDACIÓN (Compartida por QR y DNI)
+        async function procesarResultado(entrada, error) {
+            if (error || !entrada) {
+                mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos", "❌", "#450a0a", "flash-err", "", "");
+            } else if (entrada.ingresado) {
+                const hora = new Date(entrada.fecha_ingreso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                mostrarPopup("¡YA INGRESÓ!", `Ingresó a las ${hora} hs`, "⚠️", "#451a03", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
+            } else {
+                // Acceso Concedido: Guardar en BD
+                await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', entrada.id);
+                mostrarPopup("ACCESO AUTORIZADO", `${entrada.nombre} ${entrada.apellido}`, "✅", "#022c22", "flash-ok", `DNI: ${entrada.dni}`, entrada.tipo_entrada);
+                actualizarContador(); // Refrescar los números de la puerta
             }
+        }
+
+        // UTILIDADES DE INTERFAZ
+        function prepararValidacion() {
+            escaneando = false; 
+            document.getElementById('reader').style.opacity = '0.3';
+        }
+
+        function errorConexion() {
+            alert("⚠️ Error de conexión. Reintente.");
+            escaneando = true; 
+            document.getElementById('reader').style.opacity = '1';
         }
 
         function mostrarPopup(tit, info, ico, bg, flash, dni, tipo) {
@@ -120,12 +187,10 @@
             document.getElementById('res-info').innerText = info;
             document.getElementById('res-dni').innerText = dni;
 
-            // Lógica para resaltar si es VIP o General
             const etiquetaTipo = document.getElementById('res-tipo-entrada');
             if(tipo) {
                 etiquetaTipo.style.display = 'inline-block';
                 etiquetaTipo.innerText = tipo;
-                // Si es VIP, lo pintamos de dorado/amarillo
                 if(tipo.toUpperCase().includes('VIP')) {
                     etiquetaTipo.style.background = '#eab308';
                     etiquetaTipo.style.color = '#000';
@@ -143,7 +208,6 @@
         function cerrarResultado() {
             document.getElementById('resultado').style.display = 'none';
             document.getElementById('reader').style.opacity = '1';
-            // Pequeño delay para no auto-escanear el mismo código al instante
             setTimeout(() => { escaneando = true; }, 1000);
         }
 
