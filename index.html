@@ -100,22 +100,20 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN DE SUPABASE ---
+        // 1. CONFIGURACIÓN DE SUPABASE
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- 2. CONFIGURACIÓN DE EMAILJS ---
+        // 2. CONFIGURACIÓN DE EMAILJS
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
-        // Funciones del Modal T&C
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
         function cerrarTC() { 
             document.getElementById('modal-tc').style.display = 'none'; 
             document.getElementById('acepto-tc').checked = true; 
         }
 
-        // Función Principal de Compra
         async function procesarCompra(event) {
             event.preventDefault(); 
 
@@ -143,16 +141,15 @@
                 // A. Insertar en Supabase
                 const { error: supabaseError } = await client.from('entradas').insert([datos]);
                 
-                // Traducción del error de DNI duplicado
                 if (supabaseError) {
                     if (supabaseError.code === '23505' || supabaseError.message.includes('dni_unico')) {
-                        throw new Error("Este DNI ya tiene una entrada registrada. Solo se permite una entrada por persona.");
+                        throw new Error("Este DNI ya tiene una entrada registrada.");
                     } else {
-                        throw new Error("Error en la base de datos: " + supabaseError.message);
+                        throw new Error("Error en Supabase: " + supabaseError.message);
                     }
                 }
 
-                // B. Preparar variables para EmailJS
+                // B. Preparar EmailJS
                 const parametrosEmail = {
                     nombre_cliente: datos.nombre,
                     apellido_cliente: datos.apellido,
@@ -161,15 +158,25 @@
                     id_entrada: datos.id
                 };
 
-                // C. Enviar el correo electrónico
+                // C. Enviar el correo
                 await emailjs.send("service_6r4tg5n", "template_7xurzc2", parametrosEmail);
 
-                // D. Mostrar pantalla de éxito
+                // D. Mostrar éxito
                 document.getElementById('formulario-compra').style.display = 'none';
                 document.getElementById('pantalla-exito').style.display = 'block';
 
             } catch (error) {
-                alert("Hubo un error: " + error.message);
+                // EXTRACCIÓN MEJORADA DEL ERROR DE EMAILJS
+                let msjError = "Desconocido";
+                if (error instanceof Error) {
+                    msjError = error.message;
+                } else if (error.text) {
+                    msjError = error.text; 
+                } else {
+                    msjError = JSON.stringify(error);
+                }
+                
+                alert("Detalle del error: " + msjError);
                 btn.innerText = "Avanzar al Pago";
                 btn.disabled = false;
             }
