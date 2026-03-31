@@ -19,6 +19,7 @@
         
         .tc-container { margin: 25px 0; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 13px; color: #888; }
         .tc-container input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--azul); }
+        .tc-container label { cursor: pointer; }
         .tc-container a { color: var(--azul); text-decoration: none; font-weight: bold; cursor: pointer; }
 
         .btn-comprar { background: var(--azul); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
@@ -33,12 +34,11 @@
         .nps-icon:hover, .nps-icon.active { fill: var(--azul); transform: scale(1.2); }
         #txt-gracias { display: none; color: var(--azul); font-size: 13px; margin-top: 15px; font-weight: bold; }
 
-        /* Modal T&C Estilo Profesional */
         .modal-tc { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-tc-content { background: #111; padding: 35px; border-radius: 20px; max-width: 600px; width: 100%; max-height: 85vh; border: 1px solid #333; text-align: left; display: flex; flex-direction: column; }
+        .modal-tc-content { background: #111; padding: 35px; border-radius: 20px; max-width: 650px; width: 100%; max-height: 85vh; border: 1px solid #333; text-align: left; display: flex; flex-direction: column; }
         .tc-scroll { overflow-y: auto; padding-right: 15px; margin-bottom: 20px; color: #aaa; font-size: 13px; line-height: 1.6; }
         .tc-scroll h3 { color: white; font-size: 18px; margin-top: 0; margin-bottom: 20px; text-align: center; }
-        .tc-scroll h4 { color: var(--azul); margin-top: 20px; margin-bottom: 8px; text-transform: uppercase; font-size: 14px; }
+        .tc-scroll b { color: #eee; }
         .modal-footer { display: flex; gap: 10px; }
         .btn-modal { flex: 1; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; text-transform: uppercase; transition: 0.3s; }
         .btn-cancel { background: #222; color: #888; }
@@ -95,28 +95,43 @@
         <div class="modal-tc-content">
             <div class="tc-scroll">
                 <h3>TÉRMINOS Y CONDICIONES DE CONTRATACIÓN Y ACCESO – EVENTOS X</h3>
-                <p>El presente documento establece los Términos y Condiciones (en adelante, los "T&C") que rigen la adquisición de entradas y el acceso a los eventos organizados por la productora. La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones.</p>
+                <p>El presente documento establece los Términos y Condiciones (en adelante, los "T&C") que rigen la adquisición de entradas y el acceso a los eventos organizados por la productora (en adelante, el "Organizador"). La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones, redactadas en conformidad con la normativa vigente en materia de lealtad comercial y defensa del consumidor.</p>
 
-                <h4>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</h4>
-                <p>El evento es exclusivo para personas mayores de dieciocho (18) años. Al momento del ingreso, será indispensable acreditar la identidad mediante documentación oficial vigente (DNI físico o app "Mi Argentina"). Extranjeros: Pasaporte o DNI Mercosur. Sin documentación válida, se restringirá el acceso para cumplir con la legislación vigente.</p>
+                <p><b>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</b><br>
+                Para garantizar un entorno adecuado y cumplir con las normativas municipales, el evento es exclusivo para personas mayores de dieciocho (18) años.</p>
+                <p><b>Documentación:</b> Al momento del ingreso, será indispensable acreditar la identidad y edad mediante documentación oficial vigente (DNI físico o a través de la app "Mi Argentina"). En el caso de ciudadanos extranjeros, se requerirá Pasaporte o Documento de Identidad válido del Mercosur.<br>
+                <b>Admisión:</b> En caso de no poder acreditarse fehacientemente la edad mínima requerida, o si la documentación presentara irregularidades, el personal de control se verá en la obligación de restringir el acceso para cumplir con la legislación vigente.</p>
 
-                <h4>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</h4>
-                <p>Cada entrada genera un código QR único e intransferible. El sistema registrará el primer escaneo válido. Cualquier intento posterior de escaneo del mismo código será detectado e inhabilitado automáticamente.</p>
+                <p><b>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</b><br>
+                <b>Uso del QR:</b> Cada entrada genera un código QR único e intransferible que otorga una licencia de acceso individual. Se recomienda a los Asistentes resguardar la privacidad de su código.<br>
+                <b>Control en Puerta:</b> El sistema informático registrará el primer escaneo válido, habilitando el ingreso. Para proteger la capacidad del recinto y la seguridad de los presentes, cualquier intento posterior de escaneo del mismo código (por reenvíos o duplicaciones) será detectado por el sistema, inhabilitando dicho acceso. El registro horario del escáner funcionará como constancia de la prestación del servicio.</p>
 
-                <h4>3. DERECHO DE ADMISIÓN Y PERMANENCIA</h4>
-                <p>En el marco de la Ley Nacional N° 26.370, el Organizador podrá restringir la entrada o solicitar el retiro de quienes evidencien actitudes violentas, se encuentren en estado de ebriedad evidente o porten elementos de riesgo potencial.</p>
+                <p><b>3. DERECHO DE ADMISIÓN Y PERMANENCIA</b><br>
+                En el marco de la Ley Nacional N° 26.370 y con el objetivo de asegurar un clima de convivencia pacífica, el Organizador ejercerá el derecho de admisión y permanencia basándose en criterios objetivos. Se podrá restringir la entrada o solicitar el retiro del recinto a quienes:<br>
+                - Evidencien actitudes violentas, discriminatorias o que alteren el orden público.<br>
+                - Se encuentren en estado de ebriedad evidente o bajo efectos de sustancias que pongan en riesgo su propia integridad o la de terceros.<br>
+                - Porten elementos que el personal de seguridad considere un riesgo potencial (pirotecnia, objetos contundentes, punzocortantes, etc.).</p>
 
-                <h4>4. POLÍTICA DE REVOCACIÓN Y DEVOLUCIONES</h4>
-                <p>Derecho de Arrepentimiento (Ley N° 24.240): Dispone de 10 días corridos desde la emisión para revocar la compra. Se solicita realizarlo con una antelación mínima de 48 horas al evento por razones logísticas y de aforo. El reintegro corresponde al valor nominal de la entrada.</p>
+                <p><b>4. POLÍTICA DE REVOCACIÓN Y DEVOLUCIONES</b><br>
+                <b>Derecho de Arrepentimiento:</b> De acuerdo con la Ley N° 24.240 y la Res. 424/2020, el Usuario dispone de un plazo de diez (10) días corridos desde la emisión del ticket para revocar su compra. Este derecho podrá ejercerse mediante los canales de contacto oficiales o el botón dispuesto a tal fin en la plataforma.<br>
+                <b>Organización y Logística:</b> Dado que la provisión de este servicio implica el bloqueo de un cupo limitado y gastos de producción anticipados, se solicita a los Usuarios ejercer cualquier solicitud de revocación con una antelación mínima de cuarenta y ocho (48) horas previas a la apertura de puertas, a fin de permitir la correcta gestión del aforo y la seguridad del evento.<br>
+                <b>Cargos por Servicio (Service Charge):</b> En caso de proceder una devolución, se reintegrará el valor nominal de la entrada. El costo correspondiente al cargo por servicio y/o comisiones de plataformas de pago retribuye la gestión tecnológica, el procesamiento financiero y el uso de la plataforma, considerándose un servicio perfeccionado y consumido al momento de la compra, por lo que su reintegro estará sujeto a evaluación de acuerdo a la normativa aplicable.</p>
 
-                <h4>5. REPROGRAMACIÓN Y CASO FORTUITO</h4>
-                <p>Ante eventualidades de fuerza mayor, el evento será reprogramado. Las entradas mantendrán validez para la nueva fecha. En caso de no poder asistir, el usuario tendrá 15 días para solicitar el reembolso.</p>
+                <p><b>5. REPROGRAMACIÓN Y CASO FORTUITO</b><br>
+                <b>Fuerza Mayor:</b> Ante eventualidades climáticas severas, disposiciones gubernamentales, o situaciones imprevistas de fuerza mayor que impidan la realización segura del evento, el Organizador procederá a su reprogramación.<br>
+                <b>Validez y Reintegros:</b> Las entradas adquiridas mantendrán total validez para la nueva fecha. Aquellos Asistentes que no puedan concurrir a la fecha reprogramada contarán con un plazo de quince (15) días corridos para solicitar el reembolso del valor del ticket.<br>
+                <b>Gastos Adicionales:</b> Entendiendo la naturaleza imprevista de los eventos de fuerza mayor, la responsabilidad del Organizador se limitará a la gestión y devolución del valor de la entrada, no resultando factible la asunción de gastos indirectos (como traslados o alojamientos) en los que pudiera haber incurrido el Asistente.</p>
 
-                <h4>6. RESPONSABILIDAD Y OBJETOS PERSONALES</h4>
-                <p>Salvo negligencia probada, la custodia de objetos personales de valor es responsabilidad de cada Asistente.</p>
+                <p><b>6. RESPONSABILIDAD Y CUIDADO DE OBJETOS PERSONALES</b><br>
+                El evento cuenta con las medidas de prevención y los seguros de responsabilidad civil exigidos por ley para resguardar la integridad de los asistentes. No obstante, se solicita a los concurrentes velar por el cuidado de sus pertenencias (celulares, documentación, dinero). Salvo que medie negligencia probada por parte del personal de la organización, la custodia de los objetos personales de valor es responsabilidad de cada Asistente.</p>
 
-                <h4>7. REGISTRO AUDIOVISUAL Y PRIVACIDAD</h4>
-                <p>El evento podrá ser registrado con fines promocionales. Sus datos (Ley N° 25.326) serán tratados con confidencialidad exclusiva para la gestión de tickets.</p>
+                <p><b>7. REGISTRO AUDIOVISUAL Y PROTECCIÓN DE DATOS</b><br>
+                <b>Imagen:</b> El evento podrá ser registrado audiovisualmente con fines promocionales. Al ingresar, el Asistente comprende que su imagen en contextos generales del público podrá ser utilizada por la productora en sus canales de difusión.<br>
+                <b>Privacidad (Ley N° 25.326):</b> Los datos personales provistos durante la compra serán tratados con estricta confidencialidad y utilizados exclusivamente para la gestión de tickets, control de aforo y comunicaciones vinculadas a Eventos X.<br>
+                <b>Responsable y Contacto:</b> El Responsable de la Base de Datos es la productora de Eventos X. El Usuario conserva en todo momento su derecho a solicitar el acceso, actualización, rectificación o supresión de sus datos comunicándose al canal oficial: [ingresar tu mail de contacto aquí].</p>
+
+                <p><b>8. LEY APLICABLE Y RESOLUCIÓN DE CONTROVERSIAS</b><br>
+                La contratación y el acceso al evento se rigen íntegramente por las leyes de la República Argentina. Ante cualquier divergencia que pudiera suscitarse sobre la interpretación, validez o ejecución de los presentes Términos y Condiciones, las partes procurarán resolverlo de buena fe y se regirán conforme a la normativa aplicable en materia de defensa del consumidor y la jurisdicción que legalmente corresponda.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn-modal btn-cancel" onclick="cerrarTC()">Cerrar</button>
@@ -144,7 +159,6 @@
         async function procesarCompra(event) {
             event.preventDefault();
 
-            // MEJORA: Validar Checkbox T&C con mensaje amigable
             if (!document.getElementById('acepto-tc').checked) {
                 alert("⚠️ Para continuar, es necesario leer y aceptar los Términos y Condiciones.");
                 return;
@@ -169,7 +183,6 @@
             try {
                 const { error } = await client.from('entradas').insert([datos]);
                 
-                // MEJORA: Capturar error de DNI duplicado con lenguaje humano
                 if (error) {
                     if (error.message.includes('dni_unico')) {
                         throw new Error("Este DNI ya tiene una entrada registrada. Por seguridad, solo se permite una entrada por persona.");
@@ -189,7 +202,6 @@
                 document.getElementById('pantalla-exito').style.display = 'block';
 
             } catch (err) {
-                // Alerta amigable para cualquier error
                 alert("ℹ️ " + err.message);
                 btn.innerText = "Comprar Entrada";
                 btn.disabled = false;
