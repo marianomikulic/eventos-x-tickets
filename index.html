@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eventos X - Entradas Oficiales</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --azul: #3b82f6; --fondo: #000; --caja: #111; --texto: #fff; --borde: #333; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: var(--texto); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
@@ -18,6 +19,7 @@
         
         .btn-comprar { background: var(--azul); color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: background 0.3s; }
         .btn-comprar:hover { background: #2563eb; }
+        .btn-comprar:disabled { background: #555; cursor: not-allowed; }
 
         /* Estilos T&C */
         .tc-container { margin: 20px 0; text-align: left; font-size: 13px; color: #a3a3a3; display: flex; align-items: flex-start; gap: 10px; }
@@ -44,8 +46,9 @@
         <p style="color: #a3a3a3; margin-bottom: 30px;">Completá tus datos para adquirir la entrada.</p>
         
         <form onsubmit="procesarCompra(event)">
-            <input type="text" id="nombre" placeholder="Nombre" required>
-            <input type="text" id="apellido" placeholder="Apellido" required>
+            <input type="text" id="nombre" placeholder="Nombre" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
+            <input type="text" id="apellido" placeholder="Apellido" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
+            
             <input type="number" id="dni" placeholder="DNI (Sin puntos, máx 8 números)" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" required>
             <input type="email" id="email" placeholder="Correo Electrónico" required>
             
@@ -79,22 +82,16 @@
             <h2>Términos y Condiciones – Eventos X</h2>
             <div class="tc-texto">
                 <p>La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones, redactadas en conformidad con la normativa vigente en materia de lealtad comercial y defensa del consumidor.</p>
-                
                 <h4>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</h4>
                 <p>Para garantizar un entorno adecuado, el evento es exclusivo para personas <strong>mayores de dieciocho (18) años</strong>. Al momento del ingreso, será indispensable acreditar la identidad y edad mediante documentación oficial vigente (DNI físico o a través de la app "Mi Argentina"). En el caso de ciudadanos extranjeros, se requerirá Pasaporte o Documento de Identidad válido del Mercosur. En caso de no poder acreditarse la edad mínima, se restringirá el acceso sin derecho a reembolso.</p>
-
                 <h4>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</h4>
                 <p>Cada entrada genera un código QR único e intransferible que otorga una licencia de acceso individual. El sistema informático registrará el primer escaneo válido, habilitando el ingreso. Cualquier intento posterior de escaneo del mismo código (por reenvíos o duplicaciones) será detectado, inhabilitando dicho acceso. El registro horario del escáner funcionará como constancia de la prestación del servicio.</p>
-
                 <h4>3. DERECHO DE ADMISIÓN Y PERMANENCIA</h4>
                 <p>En el marco de la Ley Nacional N° 26.370, el Organizador ejercerá el derecho de admisión y permanencia. Se podrá restringir la entrada o solicitar el retiro a quienes evidencien actitudes violentas, se encuentren en estado de ebriedad evidente, o porten elementos que el personal de seguridad considere un riesgo potencial.</p>
-
                 <h4>4. POLÍTICA DE REVOCACIÓN Y DEVOLUCIONES</h4>
                 <p>De acuerdo con la Ley N° 24.240 y la Res. 424/2020, el Usuario dispone de un plazo de diez (10) días corridos desde la emisión del ticket para revocar su compra. Dado que la provisión implica el bloqueo de un cupo limitado, se solicita ejercer cualquier revocación con una antelación mínima de 48 horas previas a la apertura de puertas. El costo correspondiente al cargo por servicio (Service Charge) retribuye la gestión tecnológica y el procesamiento financiero, considerándose un servicio perfeccionado al momento de la compra.</p>
-
                 <h4>5. REPROGRAMACIÓN Y CASO FORTUITO</h4>
                 <p>Ante eventualidades climáticas severas o fuerza mayor, el evento será reprogramado. Las entradas mantendrán total validez para la nueva fecha. Quienes no puedan concurrir contarán con 15 días corridos para solicitar el reembolso. La responsabilidad del Organizador se limitará al valor de la entrada, no asumiendo gastos indirectos (traslados, alojamientos).</p>
-
                 <h4>6. RESPONSABILIDAD Y DATOS PERSONALES</h4>
                 <p>La custodia de los objetos personales de valor es responsabilidad de cada Asistente. Los datos personales provistos (Ley N° 25.326) serán tratados con confidencialidad para la gestión de tickets. El Responsable de la Base de Datos es la productora de Eventos X. Para ejercer derechos sobre sus datos, contactar mediante los canales oficiales.</p>
             </div>
@@ -103,23 +100,25 @@
     </div>
 
     <script>
-        // Configuración de Supabase
+        // --- 1. CONFIGURACIÓN DE SUPABASE ---
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // --- 2. CONFIGURACIÓN DE EMAILJS ---
+        emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
         // Funciones del Modal T&C
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
         function cerrarTC() { 
             document.getElementById('modal-tc').style.display = 'none'; 
-            document.getElementById('acepto-tc').checked = true; // Auto-tilda al cerrar el modal si lo leyeron
+            document.getElementById('acepto-tc').checked = true; 
         }
 
         // Función Principal de Compra
         async function procesarCompra(event) {
-            event.preventDefault(); // Evita que la página se recargue
+            event.preventDefault(); 
 
-            // Validación de los Términos y Condiciones
             if (!document.getElementById('acepto-tc').checked) {
                 alert("⚠️ Para continuar, debés aceptar los Términos y Condiciones.");
                 return;
@@ -129,7 +128,7 @@
             btn.innerText = "Procesando...";
             btn.disabled = true;
 
-            const idUnico = crypto.randomUUID(); // Genera el ID para el QR
+            const idUnico = crypto.randomUUID(); 
             const datos = {
                 id: idUnico,
                 nombre: document.getElementById('nombre').value,
@@ -141,17 +140,36 @@
             };
 
             try {
-                // Inserta los datos en Supabase (esto dispara tu email automático)
-                const { error } = await client.from('entradas').insert([datos]);
+                // A. Insertar en Supabase
+                const { error: supabaseError } = await client.from('entradas').insert([datos]);
+                
+                // Traducción del error de DNI duplicado
+                if (supabaseError) {
+                    if (supabaseError.code === '23505' || supabaseError.message.includes('dni_unico')) {
+                        throw new Error("Este DNI ya tiene una entrada registrada. Solo se permite una entrada por persona.");
+                    } else {
+                        throw new Error("Error en la base de datos: " + supabaseError.message);
+                    }
+                }
 
-                if (error) throw error;
+                // B. Preparar variables para EmailJS
+                const parametrosEmail = {
+                    nombre_cliente: datos.nombre,
+                    apellido_cliente: datos.apellido,
+                    email_cliente: datos.email,
+                    tipo_entrada: datos.tipo_entrada,
+                    id_entrada: datos.id
+                };
 
-                // Oculta el formulario y muestra la pantalla de éxito
+                // C. Enviar el correo electrónico
+                await emailjs.send("service_6r4tg5n", "template_7xurzc2", parametrosEmail);
+
+                // D. Mostrar pantalla de éxito
                 document.getElementById('formulario-compra').style.display = 'none';
                 document.getElementById('pantalla-exito').style.display = 'block';
 
             } catch (error) {
-                alert("Hubo un error al procesar la entrada. Por favor, intentá nuevamente.");
+                alert("Hubo un error: " + error.message);
                 btn.innerText = "Avanzar al Pago";
                 btn.disabled = false;
             }
