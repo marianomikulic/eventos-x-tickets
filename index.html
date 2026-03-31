@@ -54,7 +54,9 @@
         <form onsubmit="procesarCompra(event)">
             <input type="text" id="nombre" placeholder="Nombre" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
             <input type="text" id="apellido" placeholder="Apellido" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
-            <input type="text" id="dni" placeholder="DNI (8 números exactos)" minlength="8" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+            
+            <input type="text" id="dni" placeholder="DNI (8 números exactos)" minlength="8" maxlength="8" pattern="\d{8}" title="Debe contener exactamente 8 números" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+            
             <input type="email" id="email" placeholder="Correo Electrónico" required>
             
             <select id="tipo_entrada" required>
@@ -147,8 +149,6 @@
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
         let idVentaActual = "";
-        
-        // El nuevo límite de seguridad (97%)
         const AFORO_MAXIMO = 970; 
 
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
@@ -162,6 +162,13 @@
         async function procesarCompra(event) {
             event.preventDefault();
 
+            // MODIFICACIÓN: Freno estricto de JS para asegurar 8 dígitos
+            const dniInput = document.getElementById('dni').value;
+            if (dniInput.length !== 8) {
+                alert("⚠️ El DNI debe contener exactamente 8 números.");
+                return;
+            }
+
             if (!document.getElementById('acepto-tc').checked) {
                 alert("⚠️ Para continuar, es necesario leer y aceptar los Términos y Condiciones.");
                 return;
@@ -172,7 +179,6 @@
             btn.disabled = true;
 
             try {
-                // Validación rápida en Frontend
                 const { count, error: countError } = await client
                     .from('entradas')
                     .select('*', { count: 'exact', head: true });
@@ -190,18 +196,16 @@
                     id: idVentaActual,
                     nombre: document.getElementById('nombre').value,
                     apellido: document.getElementById('apellido').value,
-                    dni: document.getElementById('dni').value,
+                    dni: dniInput,
                     email: document.getElementById('email').value,
                     tipo_entrada: document.getElementById('tipo_entrada').value,
                     ingresado: false,
                     id_venta: idVentaActual
                 };
 
-                // Inserción en Base de Datos (Acá actúa el candado SQL)
                 const { error } = await client.from('entradas').insert([datos]);
                 
                 if (error) {
-                    // Capturamos el error específico que programamos en Supabase
                     if (error.message.includes('AFORO_AGOTADO')) {
                         throw new Error("❌ ¡SOLD OUT! Se acaban de agotar las últimas entradas disponibles.");
                     }
