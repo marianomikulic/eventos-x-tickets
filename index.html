@@ -7,36 +7,36 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --azul: #3b82f6; --fondo: #000; --caja: #111; --texto: #fff; --borde: #333; }
+        :root { --azul: #3b82f6; --fondo: #000; --caja: #111; --texto: #fff; --borde: #333; --verde: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: var(--texto); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         
-        .container { background: var(--caja); padding: 40px; border-radius: 16px; border: 1px solid var(--borde); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .container { background: var(--caja); padding: 40px; border-radius: 20px; border: 1px solid var(--borde); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         h1 { margin-top: 0; font-size: 28px; letter-spacing: 2px; }
         h1 span { color: var(--azul); }
         
         input, select { width: 100%; padding: 15px; margin-bottom: 15px; background: #1a1a1a; border: 1px solid var(--borde); color: white; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         input:focus, select:focus { outline: none; border-color: var(--azul); }
         
-        .btn-comprar { background: var(--azul); color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: background 0.3s; }
+        .btn-comprar { background: var(--azul); color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
         .btn-comprar:hover { background: #2563eb; }
         .btn-comprar:disabled { background: #555; cursor: not-allowed; }
 
         /* Estilos T&C */
         .tc-container { margin: 20px 0; text-align: left; font-size: 13px; color: #a3a3a3; display: flex; align-items: flex-start; gap: 10px; }
         .tc-container a { color: var(--azul); text-decoration: underline; font-weight: bold; cursor: pointer; }
-        .tc-container input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin-top: 2px; accent-color: var(--azul); }
-
-        /* Modal T&C */
+        
         .modal-tc { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-tc-content { background: var(--caja); padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; border: 1px solid var(--borde); text-align: left; }
-        .modal-tc-content h2 { color: white; margin-top: 0; border-bottom: 1px solid var(--borde); padding-bottom: 15px; font-size: 20px; text-align: center;}
-        .tc-texto { overflow-y: auto; padding-right: 10px; color: #cbd5e1; font-size: 13px; line-height: 1.6; }
-        .tc-texto h4 { color: var(--azul); margin-top: 20px; margin-bottom: 5px; font-size: 14px; }
-        .btn-cerrar-modal { background: #333; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 20px; width: 100%; letter-spacing: 1px; }
+        .modal-tc-content { background: var(--caja); padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; border: 1px solid var(--borde); text-align: left; }
 
-        /* Pantalla de Éxito */
+        /* Pantalla de Éxito y NPS */
         #pantalla-exito { display: none; }
-        .icono-exito { font-size: 60px; margin-bottom: 20px; }
+        .box-info { background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid var(--borde); margin: 20px 0; font-size: 14px; color: #a3a3a3; line-height: 1.6; }
+        
+        .nps-container { margin-top: 30px; border-top: 1px solid var(--borde); padding-top: 25px; }
+        .emoji-group { display: flex; justify-content: center; gap: 15px; font-size: 32px; margin-top: 15px; }
+        .emoji-btn { cursor: pointer; filter: grayscale(100%); transition: 0.3s; transform: scale(1); }
+        .emoji-btn:hover { filter: grayscale(0%); transform: scale(1.2); }
+        .emoji-active { filter: grayscale(0%) !important; transform: scale(1.2); }
     </style>
 </head>
 <body>
@@ -48,9 +48,7 @@
         <form onsubmit="procesarCompra(event)">
             <input type="text" id="nombre" placeholder="Nombre" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
             <input type="text" id="apellido" placeholder="Apellido" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
-            
-            <input type="text" id="dni" placeholder="DNI (Sin puntos, 8 números exactos)" minlength="8" maxlength="8" pattern="\d{8}" title="Debe contener exactamente 8 números" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
-            
+            <input type="text" id="dni" placeholder="DNI (8 números exactos)" minlength="8" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
             <input type="email" id="email" placeholder="Correo Electrónico" required>
             
             <select id="tipo_entrada" required>
@@ -60,134 +58,128 @@
             </select>
 
             <div class="tc-container">
-                <input type="checkbox" id="acepto-tc">
-                <label for="acepto-tc">He leído y acepto los <a onclick="abrirTC()">Términos y Condiciones de Contratación y Acceso</a>.</label>
+                <input type="checkbox" id="acepto-tc" required>
+                <label for="acepto-tc">He leído y acepto los <a onclick="abrirTC()">Términos y Condiciones</a>.</label>
             </div>
 
-            <button type="submit" class="btn-comprar" id="btn-submit">Avanzar al Pago</button>
+            <button type="submit" class="btn-comprar" id="btn-submit">Comprar Entrada</button>
         </form>
     </div>
 
     <div class="container" id="pantalla-exito">
-        <div class="icono-exito">✅</div>
-        <h1>¡COMPRA <span>EXITOSA!</span></h1>
-        <p style="color: #cbd5e1; font-size: 18px; margin-top: 20px;">Tu lugar en Eventos X está asegurado.</p>
-        <p style="color: #a3a3a3; font-size: 14px; line-height: 1.6; margin-top: 20px; background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #333;">
-            Por estrictas medidas de seguridad, <strong>el código QR de acceso ha sido enviado a tu correo electrónico</strong>. <br><br>
-            Revisá tu bandeja de entrada (y la carpeta de Spam o Promociones). Presentá ese QR directamente en la puerta junto con tu DNI físico.
-        </p>
+        <div style="font-size: 60px; margin-bottom: 15px;">✅</div>
+        <h1 style="font-size: 24px;">¡COMPRA <span style="color:var(--verde)">EXITOSA!</span></h1>
+        <p style="color: #cbd5e1; margin-top: 10px;">Tu lugar en Eventos X está asegurado.</p>
+        
+        <div class="box-info">
+            Por estrictas medidas de seguridad, <strong>el código QR de acceso ha sido enviado a tu correo electrónico</strong>.<br><br>
+            Presentalo en la puerta junto con tu DNI físico.
+        </div>
+
+        <div class="nps-container" id="seccion-nps">
+            <p style="color: #fff; font-size: 14px; font-weight: 600;">¿Cómo fue tu experiencia de compra?</p>
+            <div class="emoji-group">
+                <span class="emoji-btn" onclick="enviarNPS(1)">😠</span>
+                <span class="emoji-btn" onclick="enviarNPS(2)">🙁</span>
+                <span class="emoji-btn" onclick="enviarNPS(3)">😐</span>
+                <span class="emoji-btn" onclick="enviarNPS(4)">🙂</span>
+                <span class="emoji-btn" onclick="enviarNPS(5)">🤩</span>
+            </div>
+            <p id="txt-gracias" style="display:none; color: var(--azul); font-size: 13px; margin-top: 15px; font-weight: bold;">¡Gracias por tu feedback!</p>
+        </div>
     </div>
 
     <div id="modal-tc" class="modal-tc">
         <div class="modal-tc-content">
-            <h2>Términos y Condiciones – Eventos X</h2>
-            <div class="tc-texto">
-                <p>La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones...</p>
-                <h4>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</h4>
-                <p>Para garantizar un entorno adecuado, el evento es exclusivo para personas <strong>mayores de dieciocho (18) años</strong>. Al momento del ingreso, será indispensable acreditar la identidad y edad mediante documentación oficial vigente (DNI físico o a través de la app "Mi Argentina"). En el caso de ciudadanos extranjeros, se requerirá Pasaporte o Documento de Identidad válido del Mercosur. En caso de no poder acreditarse la edad mínima, se restringirá el acceso sin derecho a reembolso.</p>
-                <h4>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</h4>
-                <p>Cada entrada genera un código QR único e intransferible que otorga una licencia de acceso individual. El sistema informático registrará el primer escaneo válido, habilitando el ingreso. Cualquier intento posterior de escaneo del mismo código (por reenvíos o duplicaciones) será detectado, inhabilitando dicho acceso. El registro horario del escáner funcionará como constancia de la prestación del servicio.</p>
-                <h4>3. DERECHO DE ADMISIÓN Y PERMANENCIA</h4>
-                <p>En el marco de la Ley Nacional N° 26.370, el Organizador ejercerá el derecho de admisión y permanencia. Se podrá restringir la entrada o solicitar el retiro a quienes evidencien actitudes violentas, se encuentren en estado de ebriedad evidente, o porten elementos que el personal de seguridad considere un riesgo potencial.</p>
-                <h4>4. POLÍTICA DE REVOCACIÓN Y DEVOLUCIONES</h4>
-                <p>De acuerdo con la Ley N° 24.240 y la Res. 424/2020, el Usuario dispone de un plazo de diez (10) días corridos desde la emisión del ticket para revocar su compra. Dado que la provisión implica el bloqueo de un cupo limitado, se solicita ejercer cualquier revocación con una antelación mínima de 48 horas previas a la apertura de puertas. El costo correspondiente al cargo por servicio (Service Charge) retribuye la gestión tecnológica y el procesamiento financiero, considerándose un servicio perfeccionado al momento de la compra.</p>
-                <h4>5. REPROGRAMACIÓN Y CASO FORTUITO</h4>
-                <p>Ante eventualidades climáticas severas o fuerza mayor, el evento será reprogramado. Las entradas mantendrán total validez para la nueva fecha. Quienes no puedan concurrir contarán con 15 días corridos para solicitar el reembolso. La responsabilidad del Organizador se limitará al valor de la entrada, no asumiendo gastos indirectos (traslados, alojamientos).</p>
-                <h4>6. RESPONSABILIDAD Y DATOS PERSONALES</h4>
-                <p>La custodia de los objetos personales de valor es responsabilidad de cada Asistente. Los datos personales provistos (Ley N° 25.326) serán tratados con confidencialidad para la gestión de tickets. El Responsable de la Base de Datos es la productora de Eventos X. Para ejercer derechos sobre sus datos, contactar mediante los canales oficiales.</p>
+            <h2 style="color: white; margin-top: 0;">Términos y Condiciones</h2>
+            <div style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+                <p><strong>1. Edad:</strong> Exclusivo para mayores de 18 años con DNI físico.</p>
+                <p><strong>2. Ingreso:</strong> El ticket genera un QR único. El primer escaneo valida el acceso.</p>
+                <p><strong>3. Devoluciones:</strong> Según Ley 24.240, tiene 10 días para revocar la compra.</p>
+                <p><strong>4. Admisión:</strong> La casa se reserva el derecho de admisión y permanencia.</p>
             </div>
-            <button class="btn-cerrar-modal" onclick="cerrarTC()">ACEPTAR Y VOLVER</button>
+            <button onclick="cerrarTC()" style="background: #333; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold;">CERRAR Y VOLVER</button>
         </div>
     </div>
 
     <script>
-        // 1. CONFIGURACIÓN DE SUPABASE
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. CONFIGURACIÓN DE EMAILJS
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
+        let idVentaActual = "";
+
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
-        function cerrarTC() { 
-            document.getElementById('modal-tc').style.display = 'none'; 
-            document.getElementById('acepto-tc').checked = true; 
-        }
+        function cerrarTC() { document.getElementById('modal-tc').style.display = 'none'; }
 
         async function procesarCompra(event) {
-            event.preventDefault(); 
-
-            // DOBLE VALIDACIÓN DE DNI EXACTAMENTE 8 NÚMEROS
-            const dniInput = document.getElementById('dni').value;
-            if (dniInput.length !== 8) {
-                alert("⚠️ El DNI debe contener exactamente 8 números.");
-                return;
-            }
-
-            if (!document.getElementById('acepto-tc').checked) {
-                alert("⚠️ Para continuar, debés aceptar los Términos y Condiciones.");
-                return;
-            }
+            event.preventDefault();
+            
+            const dniVal = document.getElementById('dni').value;
+            if(dniVal.length !== 8) { alert("⚠️ El DNI debe tener 8 números."); return; }
 
             const btn = document.getElementById('btn-submit');
             btn.innerText = "Procesando...";
             btn.disabled = true;
 
-            const idUnico = crypto.randomUUID(); 
+            idVentaActual = crypto.randomUUID();
             const datos = {
-                id: idUnico,
+                id: idVentaActual,
                 nombre: document.getElementById('nombre').value,
                 apellido: document.getElementById('apellido').value,
-                dni: document.getElementById('dni').value,
+                dni: dniVal,
                 email: document.getElementById('email').value,
                 tipo_entrada: document.getElementById('tipo_entrada').value,
                 ingresado: false
             };
 
             try {
-                // A. Insertar en Supabase
-                const { error: supabaseError } = await client.from('entradas').insert([datos]);
-                
-                if (supabaseError) {
-                    if (supabaseError.code === '23505' || supabaseError.message.includes('dni_unico')) {
-                        throw new Error("Este DNI ya tiene una entrada registrada.");
-                    } else {
-                        throw new Error("Error en Supabase: " + supabaseError.message);
-                    }
+                const { error: dbError } = await client.from('entradas').insert([datos]);
+                if (dbError) {
+                    if (dbError.code === '23505') throw new Error("DNI ya registrado.");
+                    throw dbError;
                 }
 
-                // B. Preparar EmailJS
-                const parametrosEmail = {
+                await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
                     nombre_cliente: datos.nombre,
                     apellido_cliente: datos.apellido,
                     email_cliente: datos.email,
                     tipo_entrada: datos.tipo_entrada,
                     id_entrada: datos.id
-                };
+                });
 
-                // C. Enviar el correo
-                await emailjs.send("service_6r4tg5n", "template_7xurzc2", parametrosEmail);
-
-                // D. Mostrar éxito
                 document.getElementById('formulario-compra').style.display = 'none';
                 document.getElementById('pantalla-exito').style.display = 'block';
 
-            } catch (error) {
-                let msjError = "Desconocido";
-                if (error instanceof Error) {
-                    msjError = error.message;
-                } else if (error.text) {
-                    msjError = error.text; 
-                } else {
-                    msjError = JSON.stringify(error);
-                }
-                
-                alert("Detalle del error: " + msjError);
-                btn.innerText = "Avanzar al Pago";
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.innerText = "Comprar Entrada";
                 btn.disabled = false;
+            }
+        }
+
+        async function enviarNPS(puntuacion) {
+            // Deshabilitar clics extras
+            const emojis = document.querySelectorAll('.emoji-btn');
+            emojis.forEach(e => e.style.pointerEvents = 'none');
+
+            try {
+                const { error } = await client.from('feedback').insert([
+                    { id_venta: idVentaActual, puntuacion: puntuacion }
+                ]);
+
+                if (!error) {
+                    document.getElementById('txt-gracias').style.display = 'block';
+                    // Pintar el emoji seleccionado para dar feedback visual
+                    event.target.classList.add('emoji-active');
+                }
+            } catch (e) {
+                console.log("Error al guardar NPS");
             }
         }
     </script>
 </body>
 </html>
+
