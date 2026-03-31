@@ -30,6 +30,8 @@
         .manual-search { background: var(--caja); padding: 20px; margin: 15px auto; width: 90%; max-width: 460px; border-radius: 15px; border: 1px solid #333; box-sizing: border-box; }
         .manual-search p { margin: 0 0 10px 0; font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
         .search-row { display: flex; gap: 10px; }
+        
+        /* El input ahora es de tipo texto para aplicar el filtro de solo números con JS */
         .input-dni { flex: 1; background: #0a0a0a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; text-align: center; }
         .input-dni:focus { outline: none; border-color: var(--azul); }
         .btn-buscar { background: #333; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
@@ -41,8 +43,8 @@
         #res-icono { font-size: 60px; margin-bottom: 10px; }
         #res-titulo { font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; text-align: center; }
         #res-tipo-entrada { display: inline-block; background: #fff; color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        #res-info { font-size: 20px; font-weight: 600; margin-bottom: 5px; text-align: center; }
-        #res-dni { color: #aaa; font-size: 16px; font-family: monospace; letter-spacing: 1px; text-align: center; }
+        #res-info { font-size: 18px; font-weight: 600; margin-bottom: 5px; text-align: center; line-height: 1.4; }
+        #res-dni { color: #aaa; font-size: 16px; font-family: monospace; letter-spacing: 1px; text-align: center; margin-top: 10px; }
         
         .btn-next { background: #111; color: white; border: 1px solid #333; padding: 18px 40px; border-radius: 12px; margin-top: 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; max-width: 300px; letter-spacing: 1px; }
         
@@ -73,7 +75,7 @@
         <div class="manual-search">
             <p>¿Falla el QR? Búsqueda manual</p>
             <div class="search-row">
-                <input type="number" id="dni-manual" class="input-dni" placeholder="Ingresar DNI">
+                <input type="text" id="dni-manual" class="input-dni" placeholder="Ingresar DNI (8 números)" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                 <button class="btn-buscar" onclick="buscarPorDNI()">Buscar</button>
             </div>
         </div>
@@ -96,33 +98,27 @@
 
         let escaneando = true;
 
-        // 1. INGRESO Y CONFIGURACIÓN INICIAL
         function checkPin() {
             if(document.getElementById('pinInput').value === PIN_CORRECTO) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-interface').style.display = 'block';
-                actualizarContador(); // Cargar números al iniciar
+                actualizarContador();
                 startScanner();
             } else { 
                 alert("❌ CLAVE INCORRECTA"); 
             }
         }
 
-        // 2. ACTUALIZACIÓN DEL CONTADOR (Tiempo Real)
         async function actualizarContador() {
             try {
-                // Cuenta total de entradas vendidas
                 const { count: vendidas } = await client.from('entradas').select('*', { count: 'exact', head: true });
-                // Cuenta total de asistentes que ya ingresaron
                 const { count: ingresados } = await client.from('entradas').select('*', { count: 'exact', head: true }).eq('ingresado', true);
-                
                 document.getElementById('txt-contador').innerText = `${ingresados || 0} / ${vendidas || 0}`;
             } catch (e) {
                 console.error("Error al actualizar contador", e);
             }
         }
 
-        // 3. BÚSQUEDA POR CÁMARA (CÓDIGO QR)
         async function onScanSuccess(decodedText) {
             if (!escaneando) return;
             prepararValidacion();
@@ -133,38 +129,44 @@
             } catch (e) { errorConexion(); }
         }
 
-        // 4. BÚSQUEDA MANUAL (POR DNI)
+        // Validación estricta de 8 caracteres
         async function buscarPorDNI() {
             if (!escaneando) return;
             const dniIngresado = document.getElementById('dni-manual').value;
-            if (dniIngresado.length < 7) { alert("Ingrese un DNI válido"); return; }
+            
+            if (dniIngresado.length !== 8) { 
+                alert("⚠️ El DNI debe contener exactamente 8 números."); 
+                return; 
+            }
             
             prepararValidacion();
 
             try {
-                // Busca la entrada exacta que coincida con ese DNI
                 const { data: entrada, error } = await client.from('entradas').select('*').eq('dni', dniIngresado).single();
                 procesarResultado(entrada, error);
-                document.getElementById('dni-manual').value = ""; // Limpiar campo
+                document.getElementById('dni-manual').value = ""; 
             } catch (e) { errorConexion(); }
         }
 
-        // 5. LÓGICA CENTRAL DE VALIDACIÓN (Compartida por QR y DNI)
         async function procesarResultado(entrada, error) {
             if (error || !entrada) {
                 mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos", "❌", "#450a0a", "flash-err", "", "");
             } else if (entrada.ingresado) {
-                const hora = new Date(entrada.fecha_ingreso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                mostrarPopup("¡YA INGRESÓ!", `Ingresó a las ${hora} hs`, "⚠️", "#451a03", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
+                
+                // Formateo de Fecha y Hora formato argentino (DD/MM/YYYY a las HH:MM hs)
+                const fechaObj = new Date(entrada.fecha_ingreso);
+                const fechaStr = fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const horaStr = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                
+                mostrarPopup("¡YA INGRESÓ!", `Ingresó el ${fechaStr}\na las ${horaStr} hs`, "⚠️", "#451a03", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
+                
             } else {
-                // Acceso Concedido: Guardar en BD
                 await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', entrada.id);
                 mostrarPopup("ACCESO AUTORIZADO", `${entrada.nombre} ${entrada.apellido}`, "✅", "#022c22", "flash-ok", `DNI: ${entrada.dni}`, entrada.tipo_entrada);
-                actualizarContador(); // Refrescar los números de la puerta
+                actualizarContador(); 
             }
         }
 
-        // UTILIDADES DE INTERFAZ
         function prepararValidacion() {
             escaneando = false; 
             document.getElementById('reader').style.opacity = '0.3';
