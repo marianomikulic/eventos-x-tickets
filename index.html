@@ -3,178 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eventos X - Venta Oficial</title>
+    <title>Eventos X - Entradas Oficiales</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    
     <style>
-        :root {
-            --azul-acento: #3b82f6;
-            --verde-exito: #10b981;
-        }
-
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%); 
-            color: white;
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; padding: 20px; 
-        }
-
-        .contenedor { 
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(12px);
-            padding: 50px 40px; border-radius: 28px; 
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
-            width: 100%; max-width: 420px; text-align: center; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        h1 { font-size: 32px; margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase; }
-        h1 span { color: var(--azul-acento); font-weight: 800; }
-        .subtitulo { color: #94a3b8; margin-bottom: 30px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;}
-
-        .grupo-input { margin-bottom: 22px; text-align: left; }
-        label { display: block; margin-bottom: 8px; color: #cbd5e1; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        :root { --azul: #3b82f6; --fondo: #000; --caja: #111; --texto: #fff; --borde: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: var(--texto); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         
-        input, select { 
-            width: 100%; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.15); 
-            border-radius: 14px; box-sizing: border-box; font-size: 16px; 
-            background: rgba(0, 0, 0, 0.4); color: white; transition: 0.3s;
-        }
+        .container { background: var(--caja); padding: 40px; border-radius: 16px; border: 1px solid var(--borde); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        h1 { margin-top: 0; font-size: 28px; letter-spacing: 2px; }
+        h1 span { color: var(--azul); }
+        
+        input, select { width: 100%; padding: 15px; margin-bottom: 15px; background: #1a1a1a; border: 1px solid var(--borde); color: white; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: var(--azul); }
+        
+        .btn-comprar { background: var(--azul); color: white; border: none; padding: 16px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: background 0.3s; }
+        .btn-comprar:hover { background: #2563eb; }
 
-        input:focus, select:focus { border-color: var(--azul-acento); outline: none; background: rgba(0, 0, 0, 0.6); }
+        /* Estilos T&C */
+        .tc-container { margin: 20px 0; text-align: left; font-size: 13px; color: #a3a3a3; display: flex; align-items: flex-start; gap: 10px; }
+        .tc-container a { color: var(--azul); text-decoration: underline; font-weight: bold; cursor: pointer; }
+        .tc-container input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin-top: 2px; accent-color: var(--azul); }
 
-        .btn-accion { 
-            background: var(--azul-acento); color: white; border: none; 
-            padding: 18px; width: 100%; border-radius: 14px; 
-            font-size: 17px; font-weight: bold; cursor: pointer; 
-            transition: 0.3s; margin-top: 10px; text-transform: uppercase;
-        }
+        /* Modal T&C */
+        .modal-tc { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-tc-content { background: var(--caja); padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; border: 1px solid var(--borde); text-align: left; }
+        .modal-tc-content h2 { color: white; margin-top: 0; border-bottom: 1px solid var(--borde); padding-bottom: 15px; font-size: 20px; text-align: center;}
+        .tc-texto { overflow-y: auto; padding-right: 10px; color: #cbd5e1; font-size: 13px; line-height: 1.6; }
+        .tc-texto h4 { color: var(--azul); margin-top: 20px; margin-bottom: 5px; font-size: 14px; }
+        .btn-cerrar-modal { background: #333; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 20px; width: 100%; letter-spacing: 1px; }
 
-        .btn-accion:hover { background-color: #2563eb; transform: translateY(-2px); }
-
-        .disclaimer { margin-top: 15px; font-size: 11px; color: #64748b; line-height: 1.4; padding: 0 10px; }
-
-        #mensaje-exito { display: none; }
-        h2.exito-titulo { font-size: 36px; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; }
-        p.exito-mensaje { 
-            color: var(--verde-exito); font-size: 18px; font-weight: 600; padding: 20px;
-            background: rgba(16, 185, 129, 0.1); border-radius: 16px; border: 1px solid rgba(16, 185, 129, 0.2);
-            display: inline-flex; align-items: center; gap: 10px;
-        }
-        #qrcode, .id-ticket { display: none; }
+        /* Pantalla de Éxito */
+        #pantalla-exito { display: none; }
+        .icono-exito { font-size: 60px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="contenedor">
-        <div id="seccion-formulario">
-            <h1>EVENTOS <span>X</span></h1>
-            <p class="subtitulo">Registro Premium de Entradas</p>
+    <div class="container" id="formulario-compra">
+        <h1>EVENTOS <span>X</span></h1>
+        <p style="color: #a3a3a3; margin-bottom: 30px;">Completá tus datos para adquirir la entrada.</p>
+        
+        <form onsubmit="procesarCompra(event)">
+            <input type="text" id="nombre" placeholder="Nombre" required>
+            <input type="text" id="apellido" placeholder="Apellido" required>
+            <input type="number" id="dni" placeholder="DNI (Sin puntos, máx 8 números)" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" required>
+            <input type="email" id="email" placeholder="Correo Electrónico" required>
             
-            <form id="formularioCompra">
-                <div class="grupo-input">
-                    <label>Nombre</label>
-                    <input type="text" id="nombre" placeholder="Nombre" maxlength="16" required 
-                           oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
-                </div>
+            <select id="tipo_entrada" required>
+                <option value="" disabled selected>Seleccioná tu entrada</option>
+                <option value="General">General - $15.000</option>
+                <option value="VIP">VIP - $25.000</option>
+            </select>
 
-                <div class="grupo-input">
-                    <label>Apellido</label>
-                    <input type="text" id="apellido" placeholder="Apellido" maxlength="16" required 
-                           oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
-                </div>
+            <div class="tc-container">
+                <input type="checkbox" id="acepto-tc">
+                <label for="acepto-tc">He leído y acepto los <a onclick="abrirTC()">Términos y Condiciones de Contratación y Acceso</a>.</label>
+            </div>
 
-                <div class="grupo-input">
-                    <label>DNI</label>
-                    <input type="text" id="dni" placeholder="Sin puntos ni guiones" maxlength="8" required 
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                </div>
+            <button type="submit" class="btn-comprar" id="btn-submit">Avanzar al Pago</button>
+        </form>
+    </div>
 
-                <div class="grupo-input">
-                    <label>Email</label>
-                    <input type="email" id="email" placeholder="tu@email.com" required>
-                </div>
+    <div class="container" id="pantalla-exito">
+        <div class="icono-exito">✅</div>
+        <h1>¡COMPRA <span>EXITOSA!</span></h1>
+        <p style="color: #cbd5e1; font-size: 18px; margin-top: 20px;">Tu lugar en Eventos X está asegurado.</p>
+        <p style="color: #a3a3a3; font-size: 14px; line-height: 1.6; margin-top: 20px; background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #333;">
+            Por estrictas medidas de seguridad, <strong>el código QR de acceso ha sido enviado a tu correo electrónico</strong>. <br><br>
+            Revisá tu bandeja de entrada (y la carpeta de Spam o Promociones). Presentá ese QR directamente en la puerta junto con tu DNI físico.
+        </p>
+    </div>
+
+    <div id="modal-tc" class="modal-tc">
+        <div class="modal-tc-content">
+            <h2>Términos y Condiciones – Eventos X</h2>
+            <div class="tc-texto">
+                <p>La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones, redactadas en conformidad con la normativa vigente en materia de lealtad comercial y defensa del consumidor.</p>
                 
-                <div class="grupo-input">
-                    <label>Tipo de Entrada</label>
-                    <select id="tipoEntrada" required>
-                        <option value="GENERAL">General ($15.000)</option>
-                        <option value="VIP">VIP ($25.000)</option>
-                    </select>
-                </div>
+                <h4>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</h4>
+                <p>Para garantizar un entorno adecuado, el evento es exclusivo para personas <strong>mayores de dieciocho (18) años</strong>. Al momento del ingreso, será indispensable acreditar la identidad y edad mediante documentación oficial vigente (DNI físico o a través de la app "Mi Argentina"). En el caso de ciudadanos extranjeros, se requerirá Pasaporte o Documento de Identidad válido del Mercosur. En caso de no poder acreditarse la edad mínima, se restringirá el acceso sin derecho a reembolso.</p>
 
-                <button type="submit" class="btn-accion" id="btnAccion">Obtener Entrada</button>
-                <p class="disclaimer">Al comprar, aceptás los términos de permanencia y política de devolución.</p>
-            </form>
-        </div>
+                <h4>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</h4>
+                <p>Cada entrada genera un código QR único e intransferible que otorga una licencia de acceso individual. El sistema informático registrará el primer escaneo válido, habilitando el ingreso. Cualquier intento posterior de escaneo del mismo código (por reenvíos o duplicaciones) será detectado, inhabilitando dicho acceso. El registro horario del escáner funcionará como constancia de la prestación del servicio.</p>
 
-        <div id="mensaje-exito">
-            <h2 class="exito-titulo">¡Compra Exitosa!</h2>
-            <p class="exito-mensaje"><span>✅</span> El QR ya llegó a tu casilla de mail.</p>
-            <div id="qrcode"></div>
-            <p class="id-ticket" id="id-ticket"></p>
+                <h4>3. DERECHO DE ADMISIÓN Y PERMANENCIA</h4>
+                <p>En el marco de la Ley Nacional N° 26.370, el Organizador ejercerá el derecho de admisión y permanencia. Se podrá restringir la entrada o solicitar el retiro a quienes evidencien actitudes violentas, se encuentren en estado de ebriedad evidente, o porten elementos que el personal de seguridad considere un riesgo potencial.</p>
+
+                <h4>4. POLÍTICA DE REVOCACIÓN Y DEVOLUCIONES</h4>
+                <p>De acuerdo con la Ley N° 24.240 y la Res. 424/2020, el Usuario dispone de un plazo de diez (10) días corridos desde la emisión del ticket para revocar su compra. Dado que la provisión implica el bloqueo de un cupo limitado, se solicita ejercer cualquier revocación con una antelación mínima de 48 horas previas a la apertura de puertas. El costo correspondiente al cargo por servicio (Service Charge) retribuye la gestión tecnológica y el procesamiento financiero, considerándose un servicio perfeccionado al momento de la compra.</p>
+
+                <h4>5. REPROGRAMACIÓN Y CASO FORTUITO</h4>
+                <p>Ante eventualidades climáticas severas o fuerza mayor, el evento será reprogramado. Las entradas mantendrán total validez para la nueva fecha. Quienes no puedan concurrir contarán con 15 días corridos para solicitar el reembolso. La responsabilidad del Organizador se limitará al valor de la entrada, no asumiendo gastos indirectos (traslados, alojamientos).</p>
+
+                <h4>6. RESPONSABILIDAD Y DATOS PERSONALES</h4>
+                <p>La custodia de los objetos personales de valor es responsabilidad de cada Asistente. Los datos personales provistos (Ley N° 25.326) serán tratados con confidencialidad para la gestión de tickets. El Responsable de la Base de Datos es la productora de Eventos X. Para ejercer derechos sobre sus datos, contactar mediante los canales oficiales.</p>
+            </div>
+            <button class="btn-cerrar-modal" onclick="cerrarTC()">ACEPTAR Y VOLVER</button>
         </div>
     </div>
 
     <script>
-        const INFO_EVENTO = {
-            fecha: "Sábado 15 Ago 2026 @ 9:00 pm",
-            direccion: "Club Ciudad de Buenos Aires, Av. del Libertador 7501, CABA"
-        };
-
+        // Configuración de Supabase
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        emailjs.init("fTAOcJXUAi8-UKPu2");
+        // Funciones del Modal T&C
+        function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
+        function cerrarTC() { 
+            document.getElementById('modal-tc').style.display = 'none'; 
+            document.getElementById('acepto-tc').checked = true; // Auto-tilda al cerrar el modal si lo leyeron
+        }
 
-        document.getElementById('formularioCompra').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnAccion');
+        // Función Principal de Compra
+        async function procesarCompra(event) {
+            event.preventDefault(); // Evita que la página se recargue
+
+            // Validación de los Términos y Condiciones
+            if (!document.getElementById('acepto-tc').checked) {
+                alert("⚠️ Para continuar, debés aceptar los Términos y Condiciones.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit');
+            btn.innerText = "Procesando...";
             btn.disabled = true;
-            btn.innerText = "PROCESANDO...";
 
-            const n = document.getElementById('nombre').value.trim();
-            const a = document.getElementById('apellido').value.trim();
-            const d = document.getElementById('dni').value.trim();
-            const m = document.getElementById('email').value.trim();
-            const tipo = document.getElementById('tipoEntrada').value;
-            const precio = tipo === "VIP" ? "$25.000" : "$15.000";
+            const idUnico = crypto.randomUUID(); // Genera el ID para el QR
+            const datos = {
+                id: idUnico,
+                nombre: document.getElementById('nombre').value,
+                apellido: document.getElementById('apellido').value,
+                dni: document.getElementById('dni').value,
+                email: document.getElementById('email').value,
+                tipo_entrada: document.getElementById('tipo_entrada').value,
+                ingresado: false
+            };
 
             try {
-                const { data, error } = await client.from('entradas').insert([{ 
-                    nombre: n, apellido: a, dni: d, email: m 
-                }]).select().single();
-                
-                if (error) {
-                    if (error.code === '23505') throw new Error("Este DNI ya está registrado.");
-                    throw new Error(error.message);
-                }
+                // Inserta los datos en Supabase (esto dispara tu email automático)
+                const { error } = await client.from('entradas').insert([datos]);
 
-                document.getElementById('seccion-formulario').style.display = 'none';
-                document.getElementById('mensaje-exito').style.display = 'block';
-                document.getElementById('id-ticket').innerText = data.id;
+                if (error) throw error;
 
-                await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
-                    to_email: m,
-                    nombre: n + " " + a,
-                    id_ticket: data.id,
-                    precio: precio,
-                    tipo: tipo,
-                    direccion: INFO_EVENTO.direccion,
-                    fecha_evento: INFO_EVENTO.fecha,
-                    qr_link: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data.id}`
-                });
+                // Oculta el formulario y muestra la pantalla de éxito
+                document.getElementById('formulario-compra').style.display = 'none';
+                document.getElementById('pantalla-exito').style.display = 'block';
 
-            } catch (err) {
-                alert("Aviso: " + err.message);
+            } catch (error) {
+                alert("Hubo un error al procesar la entrada. Por favor, intentá nuevamente.");
+                btn.innerText = "Avanzar al Pago";
                 btn.disabled = false;
-                btn.innerText = "OBTENER ENTRADA";
             }
-        });
+        }
     </script>
 </body>
 </html>
