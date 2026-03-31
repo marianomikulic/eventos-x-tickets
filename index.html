@@ -54,8 +54,8 @@
             
             <select id="tipo_entrada" required>
                 <option value="" disabled selected>Seleccioná tu entrada</option>
-                <option value="General">General - $15.000</option>
-                <option value="VIP">VIP - $25.000</option>
+                <option value="General - $15.000">General - $15.000</option>
+                <option value="VIP - $25.000">VIP - $25.000</option>
             </select>
 
             <div class="tc-container">
@@ -81,7 +81,7 @@
         <div class="modal-tc-content">
             <h2>Términos y Condiciones – Eventos X</h2>
             <div class="tc-texto">
-                <p>La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones, redactadas en conformidad con la normativa vigente en materia de lealtad comercial y defensa del consumidor.</p>
+                <p>La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones...</p>
                 <h4>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</h4>
                 <p>Para garantizar un entorno adecuado, el evento es exclusivo para personas <strong>mayores de dieciocho (18) años</strong>. Al momento del ingreso, será indispensable acreditar la identidad y edad mediante documentación oficial vigente (DNI físico o a través de la app "Mi Argentina"). En el caso de ciudadanos extranjeros, se requerirá Pasaporte o Documento de Identidad válido del Mercosur. En caso de no poder acreditarse la edad mínima, se restringirá el acceso sin derecho a reembolso.</p>
                 <h4>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</h4>
@@ -166,7 +166,6 @@
                 document.getElementById('pantalla-exito').style.display = 'block';
 
             } catch (error) {
-                // EXTRACCIÓN MEJORADA DEL ERROR DE EMAILJS
                 let msjError = "Desconocido";
                 if (error instanceof Error) {
                     msjError = error.message;
