@@ -28,6 +28,13 @@
         #pantalla-exito { display: none; }
         .box-info { background: #161616; padding: 20px; border-radius: 15px; border: 1px solid var(--borde); margin: 25px 0; font-size: 14px; color: #aaa; line-height: 1.6; }
         
+        /* Estilos de Encuesta NPS */
+        .nps-container { margin-top: 35px; border-top: 1px solid #222; padding-top: 25px; }
+        .emoji-group { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .nps-icon { width: 35px; height: 35px; cursor: pointer; fill: #444; transition: 0.3s; }
+        .nps-icon:hover, .nps-icon.active { fill: var(--azul); transform: scale(1.2); }
+        #txt-gracias { display: none; color: var(--azul); font-size: 13px; margin-top: 15px; font-weight: bold; }
+
         /* Modales Generales */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: #111; padding: 35px; border-radius: 20px; max-width: 650px; width: 100%; border: 1px solid #333; text-align: left; display: flex; flex-direction: column; }
@@ -59,7 +66,6 @@
             <input type="text" id="nombre" placeholder="Nombre" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
             <input type="text" id="apellido" placeholder="Apellido" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
             <input type="text" id="dni" placeholder="DNI (8 números exactos)" minlength="8" maxlength="8" pattern="\d{8}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
-            
             <input type="email" id="email" placeholder="Correo Electrónico" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required>
             
             <select id="tipo_entrada" required>
@@ -83,6 +89,16 @@
         <div class="box-info">
             El código QR de acceso ha sido enviado a tu correo.<br>
             Presentalo en puerta con tu DNI físico.
+        </div>
+
+        <div class="nps-container">
+            <p style="color: #fff; font-size: 14px;">¿Cómo fue tu experiencia de compra?</p>
+            <div class="emoji-group">
+                <svg class="nps-icon" onclick="enviarNPS(1, this)" viewBox="0 0 24 24"><path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M15.5,11c0.83,0,1.5-0.67,1.5-1.5S16.33,8,15.5,8S14,8.67,14,9.5S14.67,11,15.5,11z M8.5,11 c0.83,0,1.5-0.67,1.5-1.5S9.33,8,8.5,8S7,8.67,7,9.5S7.67,11,8.5,11z M7,15.5c0,0,1.5-1.5,5-1.5s5,1.5,5,1.5V17c0,0-1.5-1-5-1 s-5,1-5,1V15.5z"/></svg>
+                <svg class="nps-icon" onclick="enviarNPS(3, this)" viewBox="0 0 24 24"><path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M15.5,11c0.83,0,1.5-0.67,1.5-1.5S16.33,8,15.5,8S14,8.67,14,9.5S14.67,11,15.5,11z M8.5,11 c0.83,0,1.5-0.67,1.5-1.5S9.33,8,8.5,8S7,8.67,7,9.5S7.67,11,8.5,11z M7,16h10v-2H7V16z"/></svg>
+                <svg class="nps-icon" onclick="enviarNPS(5, this)" viewBox="0 0 24 24"><path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M15.5,11c0.83,0,1.5-0.67,1.5-1.5S16.33,8,15.5,8S14,8.67,14,9.5S14.67,11,15.5,11z M8.5,11 c0.83,0,1.5-0.67,1.5-1.5S9.33,8,8.5,8S7,8.67,7,9.5S7.67,11,8.5,11z M12,18c-2.28,0-4.22-1.66-5-4h10 C16.22,16.34,14.28,18,12,18z"/></svg>
+            </div>
+            <p id="txt-gracias">¡Gracias por tu feedback!</p>
         </div>
     </div>
 
@@ -155,7 +171,7 @@
 
         /* Control del Modal de Correo */
         function iniciarValidacion(event) {
-            event.preventDefault(); // Frena el envío automático
+            event.preventDefault(); 
 
             const dniInput = document.getElementById('dni').value;
             if (dniInput.length !== 8) {
@@ -168,7 +184,6 @@
                 return;
             }
 
-            // Muestra el modal de pausa estratégica
             const correoIngresado = document.getElementById('email').value;
             document.getElementById('display-correo-confirmacion').innerText = correoIngresado;
             document.getElementById('modal-confirmacion-correo').style.display = 'flex';
@@ -178,9 +193,9 @@
             document.getElementById('modal-confirmacion-correo').style.display = 'none';
         }
 
-        /* Ejecución final de la compra tras confirmar el correo */
+        /* Ejecución final de la compra */
         async function ejecutarCompraFinal() {
-            cerrarModalCorreo(); // Oculta el modal de alerta
+            cerrarModalCorreo(); 
 
             const btn = document.getElementById('btn-submit');
             btn.innerText = "Verificando disponibilidad...";
@@ -238,6 +253,21 @@
                 alert("ℹ️ " + err.message);
                 btn.innerText = "Comprar Entrada";
                 btn.disabled = false;
+            }
+        }
+
+        /* FUNCIÓN DE NPS RESTAURADA */
+        async function enviarNPS(puntuacion, elemento) {
+            document.querySelectorAll('.nps-icon').forEach(i => i.classList.remove('active'));
+            elemento.classList.add('active');
+            try {
+                // Actualiza la base de datos con el feedback del cliente
+                await client.from('entradas').update({ puntuacion: puntuacion }).eq('id', idVentaActual);
+                document.getElementById('txt-gracias').style.display = 'block';
+                // Bloquea los emojis para evitar múltiples clics
+                document.querySelectorAll('.nps-icon').forEach(i => i.style.pointerEvents = 'none');
+            } catch (e) { 
+                console.error("Error al guardar la encuesta NPS:", e); 
             }
         }
     </script>
