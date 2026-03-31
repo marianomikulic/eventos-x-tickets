@@ -147,6 +147,7 @@
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
         let idVentaActual = "";
+        const AFORO_MAXIMO = 1000; // Límite de entradas
 
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
         function cerrarTC() { document.getElementById('modal-tc').style.display = 'none'; }
@@ -165,22 +166,39 @@
             }
 
             const btn = document.getElementById('btn-submit');
-            btn.innerText = "Procesando...";
+            btn.innerText = "Verificando disponibilidad...";
             btn.disabled = true;
 
-            idVentaActual = crypto.randomUUID();
-            const datos = {
-                id: idVentaActual,
-                nombre: document.getElementById('nombre').value,
-                apellido: document.getElementById('apellido').value,
-                dni: document.getElementById('dni').value,
-                email: document.getElementById('email').value,
-                tipo_entrada: document.getElementById('tipo_entrada').value,
-                ingresado: false,
-                id_venta: idVentaActual
-            };
-
             try {
+                // 1. VERIFICAR AFORO MÁXIMO
+                const { count, error: countError } = await client
+                    .from('entradas')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) throw new Error("Error al verificar disponibilidad.");
+
+                if (count >= AFORO_MAXIMO) {
+                    alert("❌ ¡SOLD OUT! Se han agotado las entradas para este evento.");
+                    btn.innerText = "Agotado";
+                    // Mantenemos el botón deshabilitado
+                    return; 
+                }
+
+                btn.innerText = "Procesando...";
+
+                idVentaActual = crypto.randomUUID();
+                const datos = {
+                    id: idVentaActual,
+                    nombre: document.getElementById('nombre').value,
+                    apellido: document.getElementById('apellido').value,
+                    dni: document.getElementById('dni').value,
+                    email: document.getElementById('email').value,
+                    tipo_entrada: document.getElementById('tipo_entrada').value,
+                    ingresado: false,
+                    id_venta: idVentaActual
+                };
+
+                // 2. INSERTAR EN BASE DE DATOS
                 const { error } = await client.from('entradas').insert([datos]);
                 
                 if (error) {
@@ -190,6 +208,7 @@
                     throw error;
                 }
 
+                // 3. ENVIAR EMAIL
                 await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
                     nombre_cliente: datos.nombre,
                     apellido_cliente: datos.apellido,
