@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --azul: #3b82f6; --fondo: #0a0a0a; --caja: #111; --texto: #fff; --borde: #222; --verde: #10b981; }
+        :root { --azul: #3b82f6; --fondo: #0a0a0a; --caja: #111; --texto: #fff; --borde: #222; --verde: #10b981; --rojo: #ef4444; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: var(--texto); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         
         .container { background: var(--caja); padding: 40px; border-radius: 20px; border: 1px solid var(--borde); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
@@ -19,7 +19,6 @@
         
         .tc-container { margin: 25px 0; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 13px; color: #888; }
         .tc-container input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--azul); }
-        .tc-container label { cursor: pointer; }
         .tc-container a { color: var(--azul); text-decoration: none; font-weight: bold; cursor: pointer; }
 
         .btn-comprar { background: var(--azul); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
@@ -34,13 +33,14 @@
         .nps-icon:hover, .nps-icon.active { fill: var(--azul); transform: scale(1.2); }
         #txt-gracias { display: none; color: var(--azul); font-size: 13px; margin-top: 15px; font-weight: bold; }
 
-        /* Modal T&C Mejorado */
+        /* Modal T&C Estilo Profesional */
         .modal-tc { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-tc-content { background: #111; padding: 35px; border-radius: 20px; max-width: 550px; width: 100%; max-height: 80vh; border: 1px solid #333; text-align: left; display: flex; flex-direction: column; }
-        .tc-scroll { overflow-y: auto; padding-right: 15px; margin-bottom: 20px; color: #aaa; font-size: 14px; line-height: 1.6; }
-        .tc-scroll h4 { color: var(--azul); margin-top: 20px; margin-bottom: 8px; text-transform: uppercase; font-size: 15px; }
+        .modal-tc-content { background: #111; padding: 35px; border-radius: 20px; max-width: 600px; width: 100%; max-height: 85vh; border: 1px solid #333; text-align: left; display: flex; flex-direction: column; }
+        .tc-scroll { overflow-y: auto; padding-right: 15px; margin-bottom: 20px; color: #aaa; font-size: 13px; line-height: 1.6; }
+        .tc-scroll h3 { color: white; font-size: 18px; margin-top: 0; margin-bottom: 20px; text-align: center; }
+        .tc-scroll h4 { color: var(--azul); margin-top: 20px; margin-bottom: 8px; text-transform: uppercase; font-size: 14px; }
         .modal-footer { display: flex; gap: 10px; }
-        .btn-modal { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; text-transform: uppercase; transition: 0.3s; }
+        .btn-modal { flex: 1; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; text-transform: uppercase; transition: 0.3s; }
         .btn-cancel { background: #222; color: #888; }
         .btn-accept { background: var(--azul); color: white; }
     </style>
@@ -49,7 +49,7 @@
 
     <div class="container" id="formulario-compra">
         <h1>EVENTOS <span>X</span></h1>
-        <p style="color: #666; margin-bottom: 30px;">Ingresá tus datos para el registro.</p>
+        <p style="color: #666; margin-bottom: 30px;">Completá tus datos para adquirir la entrada.</p>
         
         <form onsubmit="procesarCompra(event)">
             <input type="text" id="nombre" placeholder="Nombre" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
@@ -64,7 +64,7 @@
             </select>
 
             <div class="tc-container">
-                <input type="checkbox" id="acepto-tc" required>
+                <input type="checkbox" id="acepto-tc">
                 <label for="acepto-tc">He leído y acepto los <a onclick="abrirTC()">Términos y Condiciones</a></label>
             </div>
 
@@ -93,22 +93,30 @@
 
     <div id="modal-tc" class="modal-tc">
         <div class="modal-tc-content">
-            <h2 style="color: white; margin-top: 0;">Términos y Condiciones</h2>
             <div class="tc-scroll">
-                <h4>1. REQUISITO DE EDAD E IDENTIDAD</h4>
-                <p>El evento es exclusivo para mayores de dieciocho (18) años. Es obligatorio presentar DNI físico o app "Mi Argentina". Extranjeros: Pasaporte o DNI Mercosur. Sin acreditación válida, se restringirá el acceso sin reembolso.</p>
+                <h3>TÉRMINOS Y CONDICIONES DE CONTRATACIÓN Y ACCESO – EVENTOS X</h3>
+                <p>El presente documento establece los Términos y Condiciones (en adelante, los "T&C") que rigen la adquisición de entradas y el acceso a los eventos organizados por la productora. La adquisición de un ticket web implica la lectura y aceptación de las siguientes condiciones.</p>
 
-                <h4>2. VALIDEZ DEL TICKET</h4>
-                <p>Cada entrada genera un código QR único e intransferible. El sistema registrará el primer escaneo válido; cualquier intento posterior será detectado e inhabilitado.</p>
+                <h4>1. REQUISITO DE EDAD Y ACREDITACIÓN DE IDENTIDAD</h4>
+                <p>El evento es exclusivo para personas mayores de dieciocho (18) años. Al momento del ingreso, será indispensable acreditar la identidad mediante documentación oficial vigente (DNI físico o app "Mi Argentina"). Extranjeros: Pasaporte o DNI Mercosur. Sin documentación válida, se restringirá el acceso para cumplir con la legislación vigente.</p>
 
-                <h4>3. DERECHO DE ADMISIÓN</h4>
-                <p>El Organizador ejerce el derecho de admisión y permanencia (Ley N° 26.370), pudiendo retirar a quienes evidencien actitudes violentas o estado de ebriedad.</p>
+                <h4>2. VALIDEZ DEL TICKET Y PREVENCIÓN DE FRAUDES</h4>
+                <p>Cada entrada genera un código QR único e intransferible. El sistema registrará el primer escaneo válido. Cualquier intento posterior de escaneo del mismo código será detectado e inhabilitado automáticamente.</p>
 
-                <h4>4. DEVOLUCIONES</h4>
-                <p>Derecho de Arrepentimiento (Ley N° 24.240): Dispone de 10 días desde la emisión para revocar la compra, siempre que sea con 48hs de antelación al evento.</p>
+                <h4>3. DERECHO DE ADMISIÓN Y PERMANENCIA</h4>
+                <p>En el marco de la Ley Nacional N° 26.370, el Organizador podrá restringir la entrada o solicitar el retiro de quienes evidencien actitudes violentas, se encuentren en estado de ebriedad evidente o porten elementos de riesgo potencial.</p>
 
-                <h4>5. DATOS PERSONALES</h4>
-                <p>Sus datos (Ley N° 25.326) se usarán exclusivamente para la gestión de tickets y seguridad del evento.</p>
+                <h4>4. POLÍTICA DE REVOCACIÓN Y DEVOLUCIONES</h4>
+                <p>Derecho de Arrepentimiento (Ley N° 24.240): Dispone de 10 días corridos desde la emisión para revocar la compra. Se solicita realizarlo con una antelación mínima de 48 horas al evento por razones logísticas y de aforo. El reintegro corresponde al valor nominal de la entrada.</p>
+
+                <h4>5. REPROGRAMACIÓN Y CASO FORTUITO</h4>
+                <p>Ante eventualidades de fuerza mayor, el evento será reprogramado. Las entradas mantendrán validez para la nueva fecha. En caso de no poder asistir, el usuario tendrá 15 días para solicitar el reembolso.</p>
+
+                <h4>6. RESPONSABILIDAD Y OBJETOS PERSONALES</h4>
+                <p>Salvo negligencia probada, la custodia de objetos personales de valor es responsabilidad de cada Asistente.</p>
+
+                <h4>7. REGISTRO AUDIOVISUAL Y PRIVACIDAD</h4>
+                <p>El evento podrá ser registrado con fines promocionales. Sus datos (Ley N° 25.326) serán tratados con confidencialidad exclusiva para la gestión de tickets.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn-modal btn-cancel" onclick="cerrarTC()">Cerrar</button>
@@ -128,7 +136,6 @@
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
         function cerrarTC() { document.getElementById('modal-tc').style.display = 'none'; }
         
-        // Función solicitada: Cierra el modal y marca el checkbox 
         function aceptarTC() {
             document.getElementById('acepto-tc').checked = true;
             cerrarTC();
@@ -136,6 +143,13 @@
 
         async function procesarCompra(event) {
             event.preventDefault();
+
+            // MEJORA: Validar Checkbox T&C con mensaje amigable
+            if (!document.getElementById('acepto-tc').checked) {
+                alert("⚠️ Para continuar, es necesario leer y aceptar los Términos y Condiciones.");
+                return;
+            }
+
             const btn = document.getElementById('btn-submit');
             btn.innerText = "Procesando...";
             btn.disabled = true;
@@ -154,7 +168,14 @@
 
             try {
                 const { error } = await client.from('entradas').insert([datos]);
-                if (error) throw error;
+                
+                // MEJORA: Capturar error de DNI duplicado con lenguaje humano
+                if (error) {
+                    if (error.message.includes('dni_unico')) {
+                        throw new Error("Este DNI ya tiene una entrada registrada. Por seguridad, solo se permite una entrada por persona.");
+                    }
+                    throw error;
+                }
 
                 await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
                     nombre_cliente: datos.nombre,
@@ -168,7 +189,8 @@
                 document.getElementById('pantalla-exito').style.display = 'block';
 
             } catch (err) {
-                alert("Error: " + err.message);
+                // Alerta amigable para cualquier error
+                alert("ℹ️ " + err.message);
                 btn.innerText = "Comprar Entrada";
                 btn.disabled = false;
             }
