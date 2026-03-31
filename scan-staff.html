@@ -7,51 +7,65 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --azul: #3b82f6; --rojo: #ef4444; --verde: #10b981; }
-        body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; text-align: center; overflow: hidden; }
+        :root { --azul: #3b82f6; --rojo: #ef4444; --verde: #10b981; --fondo: #0a0a0a; --caja: #161616; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: white; margin: 0; text-align: center; overflow: hidden; }
         
-        #login-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-        .input-pin { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; font-size: 16px; border-radius: 12px; width: 100%; max-width: 280px; text-align: center; margin-bottom: 20px; }
-        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        /* Login Staff */
+        #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .input-pin { background: var(--caja); border: 1px solid #333; color: white; padding: 15px; font-size: 16px; border-radius: 12px; width: 100%; max-width: 280px; text-align: center; margin-bottom: 20px; transition: 0.3s; }
+        .input-pin:focus { outline: none; border-color: var(--azul); }
+        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; width: 100%; max-width: 280px; }
 
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; }
+        /* Lector */
+        #reader { width: 100%; max-width: 500px; margin: 0 auto; border: none; }
         .header { padding: 20px; background: #111; border-bottom: 1px solid #222; }
+        h1 { margin: 0; font-size: 24px; letter-spacing: 2px; }
         h1 span { color: var(--azul); }
 
-        #resultado { 
-            position: fixed; bottom: 0; left: 0; right: 0; height: 50%; 
-            background: #161616; border-radius: 30px 30px 0 0; padding: 30px; 
-            display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
-        }
-        .btn-next { background: #333; color: white; border: none; padding: 15px 40px; border-radius: 12px; margin-top: 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        /* Pantalla de Resultado */
+        #resultado { position: fixed; bottom: 0; left: 0; right: 0; height: 60%; background: var(--caja); border-radius: 30px 30px 0 0; padding: 30px 20px; display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
+        #res-icono { font-size: 60px; margin-bottom: 10px; }
+        #res-titulo { font-size: 26px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; }
+        #res-tipo-entrada { display: inline-block; background: #fff; color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        #res-info { font-size: 20px; font-weight: 600; margin-bottom: 5px; }
+        #res-dni { color: #aaa; font-size: 16px; font-family: monospace; letter-spacing: 1px; }
+        
+        .btn-next { background: #111; color: white; border: 1px solid #333; padding: 18px 40px; border-radius: 12px; margin-top: 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; max-width: 300px; letter-spacing: 1px; }
+        
+        /* Animaciones de Flash */
         .flash-ok { animation: flashG 0.5s; }
         .flash-err { animation: flashR 0.5s; }
-        @keyframes flashG { from { background: var(--verde); } to { background: #000; } }
-        @keyframes flashR { from { background: var(--rojo); } to { background: #000; } }
+        @keyframes flashG { 0% { background: var(--verde); } 100% { background: var(--fondo); } }
+        @keyframes flashR { 0% { background: var(--rojo); } 100% { background: var(--fondo); } }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h1 style="margin-bottom: 30px;">STAFF <span>X</span></h1>
-        <input type="password" id="pinInput" class="input-pin" placeholder="Clave de acceso">
-        <button class="btn-pin" onclick="checkPin()">Entrar</button>
+        <h1 style="margin-bottom: 40px;">STAFF <span>X</span></h1>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Control de Acceso</p>
+        <input type="password" id="pinInput" class="input-pin" placeholder="Clave de seguridad">
+        <button class="btn-pin" onclick="checkPin()">Entrar al Escáner</button>
     </div>
 
-    <div class="header"><h1>EVENTOS <span>X</span> | SCAN</h1></div>
+    <div class="header" id="header-scan" style="display: none;">
+        <h1>EVENTOS <span>X</span> | SCAN</h1>
+    </div>
+    
     <div id="reader"></div>
 
-    <div id="resultado">
-        <div id="res-icono" style="font-size: 60px;"></div>
-        <div id="res-titulo" style="font-size: 24px; font-weight: 800; margin: 15px 0;"></div>
-        <div id="res-info" style="font-size: 18px; line-height: 1.4;"></div>
-        <div id="res-dni" style="color: #94a3b8; margin-top: 10px; font-size: 14px;"></div>
-        <button class="btn-next" onclick="cerrarResultado()">SIGUIENTE ESCANEO</button>
+    <div id="resultado" style="display: none;">
+        <div id="res-icono"></div>
+        <div id="res-titulo"></div>
+        <div id="res-tipo-entrada"></div>
+        <div id="res-info"></div>
+        <div id="res-dni"></div>
+        <button class="btn-next" onclick="cerrarResultado()">Siguiente Escaneo</button>
     </div>
 
     <script>
-        const PIN_CORRECTO = "7a9t5!2jg_!"; 
+        const PIN_CORRECTO = "7a9t5!2jg_!"; // Mantenemos tu PIN de seguridad
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -61,47 +75,76 @@
         function checkPin() {
             if(document.getElementById('pinInput').value === PIN_CORRECTO) {
                 document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('header-scan').style.display = 'block';
                 startScanner();
-            } else { alert("CLAVE INCORRECTA"); }
+            } else { 
+                alert("❌ CLAVE INCORRECTA"); 
+            }
         }
 
         async function onScanSuccess(decodedText) {
             if (!escaneando) return;
-            escaneando = false; // Bloquea nuevos escaneos hasta pulsar el botón
+            escaneando = false; 
+            
+            // Pausar el lector visualmente (opcional pero ayuda a que el staff sepa que leyó)
+            document.getElementById('reader').style.opacity = '0.3';
 
             try {
                 const { data: entrada, error } = await client.from('entradas').select('*').eq('id', decodedText).single();
 
                 if (error || !entrada) {
-                    mostrarPopup("ERROR", "TICKET INEXISTENTE", "❌", "#7f1d1d", "flash-err");
+                    mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos", "❌", "#450a0a", "flash-err", "", "");
                 } else if (entrada.ingresado) {
-                    // PUNTO 3: Mensaje para repetidos
                     const hora = new Date(entrada.fecha_ingreso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    mostrarPopup("YA INGRESÓ", `${entrada.nombre} ${entrada.apellido} ya ingresó a las ${hora} hs`, "⚠️", "#7c2d12", "flash-err");
+                    mostrarPopup("¡YA INGRESÓ!", `Ingresó a las ${hora} hs`, "⚠️", "#451a03", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
                 } else {
-                    // PUNTO 1: Acceso autorizado y guardado de fecha
+                    // Actualizar Base de Datos (Acceso Concedido)
                     await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', decodedText);
-                    mostrarPopup("ACCESO AUTORIZADO", `${entrada.nombre} ${entrada.apellido}`, "✅", "#064e3b", "flash-ok", `DNI: ${entrada.dni}`);
+                    mostrarPopup("ACCESO AUTORIZADO", `${entrada.nombre} ${entrada.apellido}`, "✅", "#022c22", "flash-ok", `DNI: ${entrada.dni}`, entrada.tipo_entrada);
                 }
-            } catch (e) { alert("Error de conexión"); escaneando = true; }
+            } catch (e) { 
+                alert("⚠️ Error de conexión. Reintente.");
+                escaneando = true; 
+                document.getElementById('reader').style.opacity = '1';
+            }
         }
 
-        function mostrarPopup(tit, info, ico, bg, flash, dni="") {
+        function mostrarPopup(tit, info, ico, bg, flash, dni, tipo) {
             document.body.classList.add(flash);
             const res = document.getElementById('resultado');
-            res.style.display = 'block';
+            
+            res.style.display = 'flex';
             res.style.background = bg;
             document.getElementById('res-icono').innerText = ico;
             document.getElementById('res-titulo').innerText = tit;
             document.getElementById('res-info').innerText = info;
             document.getElementById('res-dni').innerText = dni;
+
+            // Lógica para resaltar si es VIP o General
+            const etiquetaTipo = document.getElementById('res-tipo-entrada');
+            if(tipo) {
+                etiquetaTipo.style.display = 'inline-block';
+                etiquetaTipo.innerText = tipo;
+                // Si es VIP, lo pintamos de dorado/amarillo
+                if(tipo.toUpperCase().includes('VIP')) {
+                    etiquetaTipo.style.background = '#eab308';
+                    etiquetaTipo.style.color = '#000';
+                } else {
+                    etiquetaTipo.style.background = '#fff';
+                    etiquetaTipo.style.color = '#000';
+                }
+            } else {
+                etiquetaTipo.style.display = 'none';
+            }
+
             setTimeout(() => document.body.classList.remove(flash), 500);
         }
 
-        // PUNTO 2: El botón reactiva el escaneo
         function cerrarResultado() {
             document.getElementById('resultado').style.display = 'none';
-            escaneando = true;
+            document.getElementById('reader').style.opacity = '1';
+            // Pequeño delay para no auto-escanear el mismo código al instante
+            setTimeout(() => { escaneando = true; }, 1000);
         }
 
         function startScanner() {
