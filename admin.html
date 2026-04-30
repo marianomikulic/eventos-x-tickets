@@ -22,7 +22,6 @@
         h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
         h1 span { color: var(--azul); }
         
-        /* Botones Header */
         .btn-refresh { background: #222; color: #fff; border: 1px solid #444; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
         .btn-refresh:hover { background: #333; border-color: var(--azul); color: var(--azul); }
         .btn-logout { background: transparent; color: #888; border: 1px solid #444; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
@@ -33,7 +32,6 @@
         .ticket-info p { margin: 0; color: #888; font-size: 14px; }
         .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; background: #333; margin-top: 12px; }
         
-        /* Contenedor de botones de acción */
         .action-buttons { display: flex; gap: 10px; align-items: center; }
         .btn-aprobar { background: var(--verde); color: #000; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 13px; }
         .btn-aprobar:hover { background: #059669; color: white; }
@@ -45,9 +43,9 @@
 
     <div id="login-screen">
         <h1 style="margin-bottom: 20px;">ADMIN <span>X</span></h1>
-        <p style="color: #888; font-size: 13px; margin-bottom: 25px; text-align: center; max-width: 300px;">Por seguridad, ingresá tu llave secreta de Supabase para conectar el panel.</p>
+        <p style="color: #888; font-size: 13px; margin-bottom: 25px; text-align: center; max-width: 300px;">Ingresá el PIN de Finanzas para continuar.</p>
         
-        <input type="password" id="pinInput" class="input-pin" placeholder="Pegá tu Secret Key (sb_secret_...)">
+        <input type="password" id="pinInput" class="input-pin" placeholder="PIN de Seguridad">
         <button class="btn-pin" onclick="checkPin()">Conectar y Acceder</button>
     </div>
 
@@ -63,70 +61,54 @@
             </div>
         </div>
 
-        <div id="lista-pendientes">
-            <!-- Las tarjetas se inyectan acá con JS -->
-        </div>
+        <div id="lista-pendientes"></div>
     </div>
 
     <script>
+        // Usamos la misma clave pública que en tu index.html (¡Esta funciona 100%!)
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
-        let client; // Se inicializa vacío para llenarlo después con la clave local
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey);
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
-        // 1. Al abrir la página, chequeamos si la PC ya tiene la llave guardada
         window.onload = () => {
-            if(localStorage.getItem('llave_maestra_x')) {
-                iniciarPanel();
-            }
+            if(localStorage.getItem('pin_admin_x')) iniciarPanel();
         }
 
-        // 2. Función del botón de login
         function checkPin() {
             const inputVal = document.getElementById('pinInput').value.trim();
-            
-            // Validamos que sea una llave secreta de Supabase
-            if(inputVal.startsWith('sb_secret_')) {
-                // La guardamos en el disco de tu navegador (Jamás en GitHub)
-                localStorage.setItem('llave_maestra_x', inputVal);
-                iniciarPanel();
-            } else { 
-                alert("❌ CLAVE INVÁLIDA. Debes pegar tu 'Secret Key' de Supabase."); 
-            }
+            localStorage.setItem('pin_admin_x', inputVal);
+            iniciarPanel();
         }
 
-        // 3. Arrancar el sistema con la llave
         function iniciarPanel() {
-            const secretKey = localStorage.getItem('llave_maestra_x');
-            client = window.supabase.createClient(supabaseUrl, secretKey);
-            
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-interface').style.display = 'block';
             cargarPendientes();
         }
 
-        // 4. Borrar la llave de la PC
         function cerrarSesion() {
-            localStorage.removeItem('llave_maestra_x');
-            location.reload(); // Recarga la página para volver al login
+            localStorage.removeItem('pin_admin_x');
+            location.reload(); 
         }
-
-        // --- EL RESTO DE TUS FUNCIONES QUEDAN INTACTAS ---
 
         async function cargarPendientes() {
             const lista = document.getElementById('lista-pendientes');
             const btnRefresh = document.querySelector('.btn-refresh');
+            const pinGuardado = localStorage.getItem('pin_admin_x');
             
             btnRefresh.innerText = "Cargando...";
             btnRefresh.style.opacity = "0.5";
             lista.innerHTML = "<p style='text-align:center; color:#888;'>Buscando reservas...</p>";
 
-            const { data, error } = await client.from('entradas').select('*').eq('estado_pago', 'pendiente').order('created_at', { ascending: true });
+            // Llamamos al túnel seguro de SQL pasándole el PIN
+            const { data, error } = await client.rpc('get_pendientes', { pin_seguridad: pinGuardado });
             
             btnRefresh.innerText = "↻ Refrescar";
             btnRefresh.style.opacity = "1";
 
             if (error) { 
-                lista.innerHTML = "<p style='text-align:center; color:#ef4444;'>Error de conexión. Es posible que tu llave secreta haya expirado. <button onclick='cerrarSesion()' style='background:none; color:var(--azul); border:none; cursor:pointer; text-decoration:underline;'>Cerrar Sesión e intentar de nuevo</button></p>"; 
+                lista.innerHTML = "<p style='text-align:center; color:#ef4444;'>❌ PIN Incorrecto o Error de conexión. <br><button onclick='cerrarSesion()' style='background:none; color:var(--azul); border:none; cursor:pointer; text-decoration:underline; margin-top:10px;'>Cerrar Sesión e intentar de nuevo</button></p>"; 
                 return; 
             }
             
@@ -170,10 +152,12 @@
 
         async function aprobarPago(id, nombre, apellido, email, tipo) {
             const btn = document.querySelector(`#card-${id} .btn-aprobar`);
+            const pinGuardado = localStorage.getItem('pin_admin_x');
             btn.innerText = "Enviando...";
             btn.disabled = true;
 
             try {
+                // 1. Enviamos el correo con el QR
                 await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
                     nombre_cliente: nombre,
                     apellido_cliente: apellido,
@@ -182,11 +166,11 @@
                     id_entrada: id
                 });
 
-                const { error } = await client.from('entradas').update({ estado_pago: 'aprobado' }).eq('id', id);
+                // 2. Aprobamos usando el túnel seguro
+                const { error } = await client.rpc('aprobar_ticket', { ticket_id: id, pin_seguridad: pinGuardado });
                 if (error) throw error;
 
                 document.getElementById(`card-${id}`).remove();
-                
                 let conteoActual = parseInt(document.getElementById('contador-pendientes').innerText);
                 document.getElementById('contador-pendientes').innerText = Math.max(0, conteoActual - 1);
 
@@ -199,7 +183,8 @@
 
         async function rechazarReserva(id) {
             if(confirm("¿Seguro que querés borrar esta reserva? Liberará el cupo de la entrada.")){
-                await client.from('entradas').delete().eq('id', id);
+                const pinGuardado = localStorage.getItem('pin_admin_x');
+                await client.rpc('borrar_ticket', { ticket_id: id, pin_seguridad: pinGuardado });
                 cargarPendientes();
             }
         }
