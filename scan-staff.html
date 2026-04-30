@@ -10,36 +10,27 @@
         :root { --azul: #3b82f6; --rojo: #ef4444; --verde: #10b981; --fondo: #0a0a0a; --caja: #161616; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: white; margin: 0; text-align: center; overflow-x: hidden; }
         
-        /* Login Staff */
         #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .input-pin { background: var(--caja); border: 1px solid #333; color: white; padding: 15px; font-size: 16px; border-radius: 12px; width: 100%; max-width: 280px; text-align: center; margin-bottom: 20px; transition: 0.3s; }
         .input-pin:focus { outline: none; border-color: var(--azul); }
         .btn-pin { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; width: 100%; max-width: 280px; }
 
-        /* Lector y Header */
         .header { padding: 15px 20px; background: #111; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin: 0; font-size: 20px; letter-spacing: 2px; }
         h1 span { color: var(--azul); }
-        
-        /* Contador de Entradas */
         .contador-badge { background: #222; border: 1px solid #444; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; color: var(--verde); letter-spacing: 1px; }
 
         #reader { width: 100%; max-width: 500px; margin: 0 auto; border: none; }
         
-        /* Buscador Manual de DNI */
         .manual-search { background: var(--caja); padding: 20px; margin: 15px auto; width: 90%; max-width: 460px; border-radius: 15px; border: 1px solid #333; box-sizing: border-box; }
         .manual-search p { margin: 0 0 10px 0; font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
         .search-row { display: flex; gap: 10px; }
-        
-        /* El input ahora es de tipo texto para aplicar el filtro de solo números con JS */
         .input-dni { flex: 1; background: #0a0a0a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; text-align: center; }
         .input-dni:focus { outline: none; border-color: var(--azul); }
         .btn-buscar { background: #333; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
         .btn-buscar:hover { background: var(--azul); }
 
-        /* Pantalla de Resultado */
         #resultado { position: fixed; bottom: 0; left: 0; right: 0; height: 65%; background: var(--caja); border-radius: 30px 30px 0 0; padding: 30px 20px; display: none; z-index: 100; box-shadow: 0 -10px 50px rgba(0,0,0,0.9); flex-direction: column; align-items: center; justify-content: center; }
-        
         #res-icono { font-size: 60px; margin-bottom: 10px; }
         #res-titulo { font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; text-align: center; }
         #res-tipo-entrada { display: inline-block; background: #fff; color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
@@ -47,8 +38,8 @@
         #res-dni { color: #aaa; font-size: 16px; font-family: monospace; letter-spacing: 1px; text-align: center; margin-top: 10px; }
         
         .btn-next { background: #111; color: white; border: 1px solid #333; padding: 18px 40px; border-radius: 12px; margin-top: 25px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; max-width: 300px; letter-spacing: 1px; }
+        .btn-logout { background: transparent; color: #888; border: 1px solid #444; padding: 5px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; margin-left: 10px; cursor: pointer; }
         
-        /* Animaciones */
         .flash-ok { animation: flashG 0.5s; }
         .flash-err { animation: flashR 0.5s; }
         @keyframes flashG { 0% { background: var(--verde); } 100% { background: var(--fondo); } }
@@ -58,15 +49,15 @@
 <body>
 
     <div id="login-screen">
-        <h1 style="margin-bottom: 40px;">STAFF <span>X</span></h1>
+        <h1 style="margin-bottom: 20px;">STAFF <span>X</span></h1>
         <p style="color: #666; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Control de Acceso</p>
-        <input type="password" id="pinInput" class="input-pin" placeholder="Clave de seguridad">
+        <input type="password" id="pinInput" class="input-pin" placeholder="PIN del Guardia">
         <button class="btn-pin" onclick="checkPin()">Entrar al Escáner</button>
     </div>
 
     <div id="main-interface" style="display: none;">
         <div class="header">
-            <h1>STAFF <span>X</span></h1>
+            <h1>STAFF <span>X</span> <button class="btn-logout" onclick="cerrarSesion()">Salir</button></h1>
             <div class="contador-badge" id="txt-contador">0 / 0</div>
         </div>
         
@@ -91,32 +82,44 @@
     </div>
 
     <script>
-        const PIN_CORRECTO = "7a9t5!2jg_!"; 
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
-        // NUEVA LLAVE MAESTRA APLICADA ACÁ
-        const supabaseKey = 'sb_secret_9zCxsXa-EByq2JvuJOzgBA_KRESK8AE';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let escaneando = true;
 
-        function checkPin() {
-            if(document.getElementById('pinInput').value === PIN_CORRECTO) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-interface').style.display = 'block';
-                actualizarContador();
-                startScanner();
-            } else { 
-                alert("❌ CLAVE INCORRECTA"); 
+        window.onload = () => {
+            if(localStorage.getItem('pin_staff_x')) {
+                iniciarScanner();
             }
+        }
+
+        function checkPin() {
+            const inputVal = document.getElementById('pinInput').value.trim();
+            localStorage.setItem('pin_staff_x', inputVal);
+            iniciarScanner();
+        }
+
+        function iniciarScanner() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'block';
+            actualizarContador();
+            startScanner();
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('pin_staff_x');
+            location.reload();
         }
 
         async function actualizarContador() {
             try {
-                const { count: vendidas } = await client.from('entradas').select('*', { count: 'exact', head: true });
-                const { count: ingresados } = await client.from('entradas').select('*', { count: 'exact', head: true }).eq('ingresado', true);
-                document.getElementById('txt-contador').innerText = `${ingresados || 0} / ${vendidas || 0}`;
+                const pinGuardado = localStorage.getItem('pin_staff_x');
+                const { data, error } = await client.rpc('get_contadores', { pin_seguridad: pinGuardado });
+                if (error) throw error;
+                document.getElementById('txt-contador').innerText = `${data.ingresados || 0} / ${data.vendidas || 0}`;
             } catch (e) {
-                console.error("Error al actualizar contador", e);
+                console.error("Error contador", e);
             }
         }
 
@@ -125,12 +128,17 @@
             prepararValidacion();
 
             try {
-                const { data: entrada, error } = await client.from('entradas').select('*').eq('id', decodedText).single();
+                const pinGuardado = localStorage.getItem('pin_staff_x');
+                const { data, error } = await client.rpc('buscar_ticket_id', { ticket_id: decodedText, pin_seguridad: pinGuardado });
+                
+                const entrada = data && data.length > 0 ? data[0] : null;
                 procesarResultado(entrada, error);
-            } catch (e) { errorConexion(); }
+            } catch (e) { 
+                // Si le mandan un QR que no es formato de base de datos, tira error de sintaxis
+                procesarResultado(null, true);
+            }
         }
 
-        // Validación estricta de 8 caracteres
         async function buscarPorDNI() {
             if (!escaneando) return;
             const dniIngresado = document.getElementById('dni-manual').value;
@@ -143,7 +151,10 @@
             prepararValidacion();
 
             try {
-                const { data: entrada, error } = await client.from('entradas').select('*').eq('dni', dniIngresado).single();
+                const pinGuardado = localStorage.getItem('pin_staff_x');
+                const { data, error } = await client.rpc('buscar_ticket_dni', { dni_buscado: dniIngresado, pin_seguridad: pinGuardado });
+                
+                const entrada = data && data.length > 0 ? data[0] : null;
                 procesarResultado(entrada, error);
                 document.getElementById('dni-manual').value = ""; 
             } catch (e) { errorConexion(); }
@@ -151,20 +162,17 @@
 
         async function procesarResultado(entrada, error) {
             if (error || !entrada) {
-                mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos", "❌", "#450a0a", "flash-err", "", "");
+                mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos o el PIN es incorrecto.", "❌", "#450a0a", "flash-err", "", "");
             } else if (entrada.estado_pago !== 'aprobado') {
-                // NUEVA VALIDACIÓN: Si escanean un QR pero el pago no fue aprobado en el panel
                 mostrarPopup("PAGO PENDIENTE", "Esta entrada no está pagada", "❌", "#450a0a", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
             } else if (entrada.ingresado) {
-                // Formateo de Fecha y Hora formato argentino (DD/MM/YYYY a las HH:MM hs)
                 const fechaObj = new Date(entrada.fecha_ingreso);
                 const fechaStr = fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const horaStr = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-                
                 mostrarPopup("¡YA INGRESÓ!", `Ingresó el ${fechaStr}\na las ${horaStr} hs`, "⚠️", "#451a03", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
-                
             } else {
-                await client.from('entradas').update({ ingresado: true, fecha_ingreso: new Date().toISOString() }).eq('id', entrada.id);
+                const pinGuardado = localStorage.getItem('pin_staff_x');
+                await client.rpc('marcar_ingreso', { ticket_id: entrada.id, pin_seguridad: pinGuardado });
                 mostrarPopup("ACCESO AUTORIZADO", `${entrada.nombre} ${entrada.apellido}`, "✅", "#022c22", "flash-ok", `DNI: ${entrada.dni}`, entrada.tipo_entrada);
                 actualizarContador(); 
             }
@@ -218,7 +226,10 @@
 
         function startScanner() {
             const html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess).catch(err => {
+                console.error("Error al iniciar cámara:", err);
+                document.getElementById('reader').innerHTML = "<p style='padding:20px; color:#888;'>Cámara no disponible. Usá el buscador manual.</p>";
+            });
         }
     </script>
 </body>
