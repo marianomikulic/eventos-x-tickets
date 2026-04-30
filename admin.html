@@ -14,7 +14,7 @@
         #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .input-pin { background: var(--caja); border: 1px solid #333; color: white; padding: 15px; border-radius: 12px; width: 320px; text-align: center; margin-bottom: 20px; font-size: 14px;}
         .input-pin:focus { outline: none; border-color: var(--azul); }
-        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 320px; text-transform: uppercase; }
+        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 320px; text-transform: uppercase; transition: 0.3s; }
 
         /* Panel Principal */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -46,7 +46,7 @@
         <p style="color: #888; font-size: 13px; margin-bottom: 25px; text-align: center; max-width: 300px;">Ingresá el PIN de Finanzas para continuar.</p>
         
         <input type="password" id="pinInput" class="input-pin" placeholder="PIN de Seguridad">
-        <button class="btn-pin" onclick="checkPin()">Conectar y Acceder</button>
+        <button class="btn-pin" id="btn-login" onclick="checkPin()">Conectar y Acceder</button>
     </div>
 
     <div id="main-interface" style="display: none; max-width: 900px; margin: 0 auto;">
@@ -65,20 +65,47 @@
     </div>
 
     <script>
-        // Usamos la misma clave pública que en tu index.html (¡Esta funciona 100%!)
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
-        window.onload = () => {
-            if(localStorage.getItem('pin_admin_x')) iniciarPanel();
+        window.onload = async () => {
+            const pinGuardado = localStorage.getItem('pin_admin_x');
+            if (pinGuardado) {
+                // Chequeo silencioso contra la base de datos
+                const { error } = await client.rpc('get_pendientes', { pin_seguridad: pinGuardado });
+                if (!error) {
+                    iniciarPanel();
+                } else {
+                    localStorage.removeItem('pin_admin_x');
+                }
+            }
         }
 
-        function checkPin() {
+        async function checkPin() {
             const inputVal = document.getElementById('pinInput').value.trim();
-            localStorage.setItem('pin_admin_x', inputVal);
-            iniciarPanel();
+            const btn = document.getElementById('btn-login');
+            
+            if(!inputVal) return;
+
+            btn.innerText = "Verificando...";
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+
+            // Intentamos traer datos usando el PIN ingresado
+            const { error } = await client.rpc('get_pendientes', { pin_seguridad: inputVal });
+
+            if (error) {
+                alert("❌ PIN INCORRECTO. Acceso denegado.");
+                document.getElementById('pinInput').value = "";
+                btn.innerText = "Conectar y Acceder";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            } else {
+                localStorage.setItem('pin_admin_x', inputVal);
+                iniciarPanel();
+            }
         }
 
         function iniciarPanel() {
@@ -101,14 +128,13 @@
             btnRefresh.style.opacity = "0.5";
             lista.innerHTML = "<p style='text-align:center; color:#888;'>Buscando reservas...</p>";
 
-            // Llamamos al túnel seguro de SQL pasándole el PIN
             const { data, error } = await client.rpc('get_pendientes', { pin_seguridad: pinGuardado });
             
             btnRefresh.innerText = "↻ Refrescar";
             btnRefresh.style.opacity = "1";
 
             if (error) { 
-                lista.innerHTML = "<p style='text-align:center; color:#ef4444;'>❌ PIN Incorrecto o Error de conexión. <br><button onclick='cerrarSesion()' style='background:none; color:var(--azul); border:none; cursor:pointer; text-decoration:underline; margin-top:10px;'>Cerrar Sesión e intentar de nuevo</button></p>"; 
+                lista.innerHTML = "<p style='text-align:center; color:#ef4444;'>❌ Sesión expirada o error de conexión.</p>"; 
                 return; 
             }
             
@@ -157,7 +183,6 @@
             btn.disabled = true;
 
             try {
-                // 1. Enviamos el correo con el QR
                 await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
                     nombre_cliente: nombre,
                     apellido_cliente: apellido,
@@ -166,7 +191,6 @@
                     id_entrada: id
                 });
 
-                // 2. Aprobamos usando el túnel seguro
                 const { error } = await client.rpc('aprobar_ticket', { ticket_id: id, pin_seguridad: pinGuardado });
                 if (error) throw error;
 
