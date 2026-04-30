@@ -170,7 +170,6 @@
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
         let idVentaActual = "";
-        const AFORO_MAXIMO = 970; 
 
         /* Control de Modales T&C */
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
@@ -210,16 +209,6 @@
             btn.disabled = true;
 
             try {
-                const { count, error: countError } = await client
-                    .from('entradas')
-                    .select('*', { count: 'exact', head: true });
-
-                if (count >= AFORO_MAXIMO) {
-                    alert("❌ ¡SOLD OUT! Se han agotado las entradas para este evento.");
-                    btn.innerText = "Agotado";
-                    return; 
-                }
-
                 idVentaActual = crypto.randomUUID();
                 const datos = {
                     id: idVentaActual,
