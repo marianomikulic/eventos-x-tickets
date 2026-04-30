@@ -83,16 +83,24 @@
         </form>
     </div>
 
+    <!-- PANTALLA EXITO (PAGO MANUAL) -->
     <div class="container" id="pantalla-exito">
-        <div style="font-size: 50px; margin-bottom: 10px;">✅</div>
-        <h1 style="font-size: 24px;">¡COMPRA <span style="color:var(--verde)">EXITOSA!</span></h1>
-        <div class="box-info">
-            El código QR de acceso ha sido enviado a tu correo.<br>
-            Presentalo en puerta con tu DNI físico.
+        <div style="font-size: 50px; margin-bottom: 10px;">⏳</div>
+        <h1 style="font-size: 24px;">¡RESERVA <span style="color:#eab308">PENDIENTE!</span></h1>
+        
+        <div class="box-info" style="color: white; border-color: #eab308;">
+            <p style="margin-top:0; color: #aaa;">Para recibir tu QR, transferí el monto correspondiente al siguiente Alias:</p>
+            
+            <!-- PONÉ TU ALIAS REAL ACÁ -->
+            <div style="background: #000; padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; letter-spacing: 2px; color: var(--azul); margin-bottom: 15px;">
+                EVENTOS.X.TICKETS
+            </div>
+            
+            <p style="font-size: 13px; color: #888; margin-bottom: 0;">Una vez que verifiquemos el ingreso en nuestra cuenta, recibirás el código QR oficial en tu correo.</p>
         </div>
 
         <div class="nps-container">
-            <p style="color: #fff; font-size: 14px;">¿Cómo fue tu experiencia de compra?</p>
+            <p style="color: #fff; font-size: 14px;">¿Cómo fue tu experiencia de reserva?</p>
             <div class="emoji-group">
                 <svg class="nps-icon" onclick="enviarNPS(1, this)" viewBox="0 0 24 24"><path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M15.5,11c0.83,0,1.5-0.67,1.5-1.5S16.33,8,15.5,8S14,8.67,14,9.5S14.67,11,15.5,11z M8.5,11 c0.83,0,1.5-0.67,1.5-1.5S9.33,8,8.5,8S7,8.67,7,9.5S7.67,11,8.5,11z M7,15.5c0,0,1.5-1.5,5-1.5s5,1.5,5,1.5V17c0,0-1.5-1-5-1 s-5,1-5,1V15.5z"/></svg>
                 <svg class="nps-icon" onclick="enviarNPS(3, this)" viewBox="0 0 24 24"><path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z M15.5,11c0.83,0,1.5-0.67,1.5-1.5S16.33,8,15.5,8S14,8.67,14,9.5S14.67,11,15.5,11z M8.5,11 c0.83,0,1.5-0.67,1.5-1.5S9.33,8,8.5,8S7,8.67,7,9.5S7.67,11,8.5,11z M7,16h10v-2H7V16z"/></svg>
@@ -193,12 +201,12 @@
             document.getElementById('modal-confirmacion-correo').style.display = 'none';
         }
 
-        /* Ejecución final de la compra */
+        /* Ejecución final de la reserva (SIN ENVÍO DE MAIL) */
         async function ejecutarCompraFinal() {
             cerrarModalCorreo(); 
 
             const btn = document.getElementById('btn-submit');
-            btn.innerText = "Verificando disponibilidad...";
+            btn.innerText = "Reservando cupo...";
             btn.disabled = true;
 
             try {
@@ -212,8 +220,6 @@
                     return; 
                 }
 
-                btn.innerText = "Procesando...";
-
                 idVentaActual = crypto.randomUUID();
                 const datos = {
                     id: idVentaActual,
@@ -223,7 +229,8 @@
                     email: document.getElementById('email').value,
                     tipo_entrada: document.getElementById('tipo_entrada').value,
                     ingresado: false,
-                    id_venta: idVentaActual
+                    id_venta: idVentaActual,
+                    estado_pago: 'pendiente'
                 };
 
                 const { error } = await client.from('entradas').insert([datos]);
@@ -237,14 +244,6 @@
                     }
                     throw error;
                 }
-
-                await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
-                    nombre_cliente: datos.nombre,
-                    apellido_cliente: datos.apellido,
-                    email_cliente: datos.email,
-                    tipo_entrada: datos.tipo_entrada,
-                    id_entrada: datos.id
-                });
 
                 document.getElementById('formulario-compra').style.display = 'none';
                 document.getElementById('pantalla-exito').style.display = 'block';
