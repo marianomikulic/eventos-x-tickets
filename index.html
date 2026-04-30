@@ -17,6 +17,9 @@
         input, select { width: 100%; padding: 15px; margin-bottom: 15px; background: #161616; border: 1px solid var(--borde); color: white; border-radius: 12px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
         input:focus, select:focus { outline: none; border-color: var(--azul); }
         
+        /* Ocultamos el honeypot de la vista humana pero los bots lo ven en el código */
+        .hp-field { position: absolute; opacity: 0; z-index: -1; top: -1000px; left: -1000px; }
+
         .tc-container { margin: 25px 0; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 13px; color: #888; }
         .tc-container input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--azul); }
         .tc-container label { cursor: pointer; }
@@ -63,6 +66,9 @@
         <p style="color: #666; margin-bottom: 30px;">Completá tus datos para adquirir la entrada.</p>
         
         <form id="form-principal" onsubmit="iniciarValidacion(event)">
+            <!-- CAMPO TRAMPA PARA BOTS (Honeypot) -->
+            <input type="text" id="website_url" name="website_url" class="hp-field" tabindex="-1" autocomplete="off" placeholder="Dejar en blanco">
+
             <input type="text" id="nombre" placeholder="Nombre" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
             <input type="text" id="apellido" placeholder="Apellido" maxlength="15" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');" required>
             <input type="text" id="dni" placeholder="DNI (8 números exactos)" minlength="8" maxlength="8" pattern="\d{8}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
@@ -97,7 +103,6 @@
         <div class="box-info" style="color: white; border-color: var(--azul);">
             <p style="margin-top:0; color: #aaa;">Para recibir tu QR, transferí el monto correspondiente al siguiente Alias:</p>
             
-            <!-- ALIAS ACTUALIZADO -->
             <div style="background: #000; padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; letter-spacing: 2px; color: var(--azul); margin-bottom: 15px;">
                 muni..b
             </div>
@@ -176,15 +181,42 @@
         emailjs.init("fTAOcJXUAi8-UKPu2"); 
 
         let idVentaActual = "";
+        
+        // Cronómetro para detección de bots de alta velocidad
+        const tiempoAperturaPagina = Date.now();
 
         /* Control de Modales T&C */
         function abrirTC() { document.getElementById('modal-tc').style.display = 'flex'; }
         function cerrarTC() { document.getElementById('modal-tc').style.display = 'none'; }
         function aceptarTC() { document.getElementById('acepto-tc').checked = true; cerrarTC(); }
 
-        /* Control del Modal de Correo */
+        /* Control del Modal de Correo y ANTIBOT */
         function iniciarValidacion(event) {
             event.preventDefault(); 
+
+            // --- INICIO ESCUDO ANTIBOT ---
+            
+            // 1. Detección Honeypot (Si el bot llenó el campo oculto, cancelamos silenciosamente)
+            if (document.getElementById('website_url').value !== "") {
+                console.warn("Actividad sospechosa bloqueada.");
+                return;
+            }
+
+            // 2. Control de Velocidad (Si llenó el formulario en menos de 4 segundos, es un bot)
+            const tiempoLlenadoSegundos = (Date.now() - tiempoAperturaPagina) / 1000;
+            if (tiempoLlenadoSegundos < 4) {
+                alert("⚠️ Por seguridad, completá el formulario más despacio.");
+                return;
+            }
+
+            // 3. Rate Limiting Local (1 reserva cada 3 minutos por dispositivo)
+            const ultimaReserva = localStorage.getItem('ultima_reserva_tickets');
+            if (ultimaReserva && (Date.now() - ultimaReserva) < 180000) {
+                alert("⏳ Ya solicitaste una entrada recientemente. Esperá unos minutos antes de intentar de nuevo.");
+                return;
+            }
+            
+            // --- FIN ESCUDO ANTIBOT ---
 
             const dniInput = document.getElementById('dni').value;
             if (dniInput.length !== 8) {
@@ -206,7 +238,7 @@
             document.getElementById('modal-confirmacion-correo').style.display = 'none';
         }
 
-        /* Ejecución final de la reserva (SIN ENVÍO DE MAIL) */
+        /* Ejecución final de la reserva */
         async function ejecutarCompraFinal() {
             cerrarModalCorreo(); 
 
@@ -240,6 +272,9 @@
                     throw error;
                 }
 
+                // Guardamos la marca de tiempo para evitar spam del mismo usuario
+                localStorage.setItem('ultima_reserva_tickets', Date.now());
+
                 document.getElementById('formulario-compra').style.display = 'none';
                 document.getElementById('pantalla-exito').style.display = 'block';
 
@@ -250,14 +285,12 @@
             }
         }
 
-        /* FUNCIÓN DE NPS SEGURA (POR RPC) */
+        /* FUNCIÓN DE NPS SEGURA */
         async function enviarNPS(puntuacion, elemento) {
-            // Animación de los emojis
             document.querySelectorAll('.nps-icon').forEach(i => i.classList.remove('active'));
             elemento.classList.add('active');
             
             try {
-                // Llamamos a la función segura de SQL en lugar de hacer un Update directo
                 const { error } = await client.rpc('guardar_nps', { 
                     ticket_id: idVentaActual, 
                     puntaje: puntuacion 
@@ -266,7 +299,6 @@
                 if (error) throw error;
 
                 document.getElementById('txt-gracias').style.display = 'block';
-                // Bloquea los emojis para evitar múltiples clics
                 document.querySelectorAll('.nps-icon').forEach(i => i.style.pointerEvents = 'none');
             } catch (e) { 
                 console.error("Error al guardar la encuesta NPS:", e); 
