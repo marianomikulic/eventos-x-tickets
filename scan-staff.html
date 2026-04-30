@@ -93,7 +93,8 @@
     <script>
         const PIN_CORRECTO = "7a9t5!2jg_!"; 
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
+        // NUEVA LLAVE MAESTRA APLICADA ACÁ
+        const supabaseKey = 'sb_secret_9zCxsXa-EByq2JvuJOzgBA_KRESK8AE';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let escaneando = true;
@@ -151,8 +152,10 @@
         async function procesarResultado(entrada, error) {
             if (error || !entrada) {
                 mostrarPopup("TICKET INVÁLIDO", "No se encuentra en la base de datos", "❌", "#450a0a", "flash-err", "", "");
+            } else if (entrada.estado_pago !== 'aprobado') {
+                // NUEVA VALIDACIÓN: Si escanean un QR pero el pago no fue aprobado en el panel
+                mostrarPopup("PAGO PENDIENTE", "Esta entrada no está pagada", "❌", "#450a0a", "flash-err", `Asistente: ${entrada.nombre} ${entrada.apellido}`, entrada.tipo_entrada);
             } else if (entrada.ingresado) {
-                
                 // Formateo de Fecha y Hora formato argentino (DD/MM/YYYY a las HH:MM hs)
                 const fechaObj = new Date(entrada.fecha_ingreso);
                 const fechaStr = fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
