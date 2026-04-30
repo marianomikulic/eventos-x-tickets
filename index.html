@@ -244,13 +244,21 @@
             }
         }
 
-        /* FUNCIÓN DE NPS RESTAURADA */
+        /* FUNCIÓN DE NPS SEGURA (POR RPC) */
         async function enviarNPS(puntuacion, elemento) {
+            // Animación de los emojis
             document.querySelectorAll('.nps-icon').forEach(i => i.classList.remove('active'));
             elemento.classList.add('active');
+            
             try {
-                // Actualiza la base de datos con el feedback del cliente
-                await client.from('entradas').update({ puntuacion: puntuacion }).eq('id', idVentaActual);
+                // Llamamos a la función segura de SQL en lugar de hacer un Update directo
+                const { error } = await client.rpc('guardar_nps', { 
+                    ticket_id: idVentaActual, 
+                    puntaje: puntuacion 
+                });
+
+                if (error) throw error;
+
                 document.getElementById('txt-gracias').style.display = 'block';
                 // Bloquea los emojis para evitar múltiples clics
                 document.querySelectorAll('.nps-icon').forEach(i => i.style.pointerEvents = 'none');
