@@ -82,6 +82,9 @@
     </div>
 
     <script>
+        // PIN estricto para la interfaz visual
+        const PIN_STAFF = "7a9t5!2jg_!";
+
         const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvZ2l6b290Ym5odmJldWdyb3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3MTAsImV4cCI6MjA5MDIxMjcxMH0.7dNueBWtcx0nUHjligZl4hS72qqlswuYw0WYR0QeVhI';
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -89,15 +92,25 @@
         let escaneando = true;
 
         window.onload = () => {
-            if(localStorage.getItem('pin_staff_x')) {
+            const pinGuardado = localStorage.getItem('pin_staff_x');
+            if(pinGuardado === PIN_STAFF) {
                 iniciarScanner();
+            } else {
+                localStorage.removeItem('pin_staff_x');
             }
         }
 
         function checkPin() {
             const inputVal = document.getElementById('pinInput').value.trim();
-            localStorage.setItem('pin_staff_x', inputVal);
-            iniciarScanner();
+            
+            // Verificación estricta del PIN
+            if(inputVal === PIN_STAFF) {
+                localStorage.setItem('pin_staff_x', inputVal);
+                iniciarScanner();
+            } else {
+                alert("❌ PIN INCORRECTO. Acceso denegado.");
+                document.getElementById('pinInput').value = ""; 
+            }
         }
 
         function iniciarScanner() {
@@ -134,7 +147,6 @@
                 const entrada = data && data.length > 0 ? data[0] : null;
                 procesarResultado(entrada, error);
             } catch (e) { 
-                // Si le mandan un QR que no es formato de base de datos, tira error de sintaxis
                 procesarResultado(null, true);
             }
         }
