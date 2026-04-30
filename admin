@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos X - Panel Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        :root { --azul: #3b82f6; --fondo: #0a0a0a; --caja: #161616; --verde: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: white; margin: 0; padding: 20px; }
+        
+        /* Login */
+        #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .input-pin { background: var(--caja); border: 1px solid #333; color: white; padding: 15px; border-radius: 12px; width: 320px; text-align: center; margin-bottom: 20px; font-size: 14px;}
+        .input-pin:focus { outline: none; border-color: var(--azul); }
+        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 320px; text-transform: uppercase; }
+
+        /* Panel Principal */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+        h1 span { color: var(--azul); }
+        
+        /* Botones Header */
+        .btn-refresh { background: #222; color: #fff; border: 1px solid #444; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .btn-refresh:hover { background: #333; border-color: var(--azul); color: var(--azul); }
+        .btn-logout { background: transparent; color: #888; border: 1px solid #444; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        .btn-logout:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+        .ticket-card { background: var(--caja); border: 1px solid #333; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .ticket-info h3 { margin: 0 0 5px 0; color: #fff; font-size: 18px; }
+        .ticket-info p { margin: 0; color: #888; font-size: 14px; }
+        .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; background: #333; margin-top: 12px; }
+        
+        /* Contenedor de botones de acción */
+        .action-buttons { display: flex; gap: 10px; align-items: center; }
+        .btn-aprobar { background: var(--verde); color: #000; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 13px; }
+        .btn-aprobar:hover { background: #059669; color: white; }
+        .btn-rechazar { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.3s; }
+        .btn-rechazar:hover { background: rgba(239, 68, 68, 0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1 style="margin-bottom: 20px;">ADMIN <span>X</span></h1>
+        <p style="color: #888; font-size: 13px; margin-bottom: 25px; text-align: center; max-width: 300px;">Por seguridad, ingresá tu llave secreta de Supabase para conectar el panel.</p>
+        
+        <input type="password" id="pinInput" class="input-pin" placeholder="Pegá tu Secret Key (sb_secret_...)">
+        <button class="btn-pin" onclick="checkPin()">Conectar y Acceder</button>
+    </div>
+
+    <div id="main-interface" style="display: none; max-width: 900px; margin: 0 auto;">
+        <div class="header">
+            <div class="header-left">
+                <button class="btn-refresh" onclick="cargarPendientes()">↻ Refrescar</button>
+                <h1>ADMIN <span>X</span></h1>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="color: #888; font-size: 15px;">Pendientes: <span id="contador-pendientes" style="color: white; font-weight: bold; font-size: 18px;">0</span></div>
+                <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <div id="lista-pendientes">
+            <!-- Las tarjetas se inyectan acá con JS -->
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://vogizootbnhvbeugroyr.supabase.co';
+        let client; // Se inicializa vacío para llenarlo después con la clave local
+        emailjs.init("fTAOcJXUAi8-UKPu2"); 
+
+        // 1. Al abrir la página, chequeamos si la PC ya tiene la llave guardada
+        window.onload = () => {
+            if(localStorage.getItem('llave_maestra_x')) {
+                iniciarPanel();
+            }
+        }
+
+        // 2. Función del botón de login
+        function checkPin() {
+            const inputVal = document.getElementById('pinInput').value.trim();
+            
+            // Validamos que sea una llave secreta de Supabase
+            if(inputVal.startsWith('sb_secret_')) {
+                // La guardamos en el disco de tu navegador (Jamás en GitHub)
+                localStorage.setItem('llave_maestra_x', inputVal);
+                iniciarPanel();
+            } else { 
+                alert("❌ CLAVE INVÁLIDA. Debes pegar tu 'Secret Key' de Supabase."); 
+            }
+        }
+
+        // 3. Arrancar el sistema con la llave
+        function iniciarPanel() {
+            const secretKey = localStorage.getItem('llave_maestra_x');
+            client = window.supabase.createClient(supabaseUrl, secretKey);
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'block';
+            cargarPendientes();
+        }
+
+        // 4. Borrar la llave de la PC
+        function cerrarSesion() {
+            localStorage.removeItem('llave_maestra_x');
+            location.reload(); // Recarga la página para volver al login
+        }
+
+        // --- EL RESTO DE TUS FUNCIONES QUEDAN INTACTAS ---
+
+        async function cargarPendientes() {
+            const lista = document.getElementById('lista-pendientes');
+            const btnRefresh = document.querySelector('.btn-refresh');
+            
+            btnRefresh.innerText = "Cargando...";
+            btnRefresh.style.opacity = "0.5";
+            lista.innerHTML = "<p style='text-align:center; color:#888;'>Buscando reservas...</p>";
+
+            const { data, error } = await client.from('entradas').select('*').eq('estado_pago', 'pendiente').order('created_at', { ascending: true });
+            
+            btnRefresh.innerText = "↻ Refrescar";
+            btnRefresh.style.opacity = "1";
+
+            if (error) { 
+                lista.innerHTML = "<p style='text-align:center; color:#ef4444;'>Error de conexión. Es posible que tu llave secreta haya expirado. <button onclick='cerrarSesion()' style='background:none; color:var(--azul); border:none; cursor:pointer; text-decoration:underline;'>Cerrar Sesión e intentar de nuevo</button></p>"; 
+                return; 
+            }
+            
+            document.getElementById('contador-pendientes').innerText = data.length;
+
+            if (data.length === 0) {
+                lista.innerHTML = "<p style='text-align:center; color:#888; margin-top: 40px; font-size: 18px;'>No hay reservas pendientes de pago. Todo al día. ✅</p>";
+                return;
+            }
+
+            lista.innerHTML = "";
+            data.forEach(entrada => {
+                const isVIP = entrada.tipo_entrada.includes('VIP');
+                const colorBadge = isVIP ? 'background:#eab308; color:#000;' : 'background:#333; color:#fff;';
+
+                let fechaFormateada = "Fecha no disponible";
+                if (entrada.created_at) {
+                    const fechaObj = new Date(entrada.created_at);
+                    const fechaStr = fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const horaStr = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                    fechaFormateada = `${fechaStr} a las ${horaStr} hs`;
+                }
+
+                const card = `
+                    <div class="ticket-card" id="card-${entrada.id}">
+                        <div class="ticket-info">
+                            <h3>${entrada.nombre} ${entrada.apellido}</h3>
+                            <p style="margin-bottom: 4px;">DNI: ${entrada.dni} | Email: ${entrada.email}</p>
+                            <p style="color: #666; font-size: 13px; font-weight: bold;">🕒 Solicitado: ${fechaFormateada}</p>
+                            <span class="badge-tipo" style="${colorBadge}">${entrada.tipo_entrada}</span>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-aprobar" onclick="aprobarPago('${entrada.id}', '${entrada.nombre}', '${entrada.apellido}', '${entrada.email}', '${entrada.tipo_entrada}')">Aprobar y Enviar QR</button>
+                            <button class="btn-rechazar" onclick="rechazarReserva('${entrada.id}')">Borrar</button>
+                        </div>
+                    </div>
+                `;
+                lista.innerHTML += card;
+            });
+        }
+
+        async function aprobarPago(id, nombre, apellido, email, tipo) {
+            const btn = document.querySelector(`#card-${id} .btn-aprobar`);
+            btn.innerText = "Enviando...";
+            btn.disabled = true;
+
+            try {
+                await emailjs.send("service_6r4tg5n", "template_7xurzc2", {
+                    nombre_cliente: nombre,
+                    apellido_cliente: apellido,
+                    email_cliente: email,
+                    tipo_entrada: tipo,
+                    id_entrada: id
+                });
+
+                const { error } = await client.from('entradas').update({ estado_pago: 'aprobado' }).eq('id', id);
+                if (error) throw error;
+
+                document.getElementById(`card-${id}`).remove();
+                
+                let conteoActual = parseInt(document.getElementById('contador-pendientes').innerText);
+                document.getElementById('contador-pendientes').innerText = Math.max(0, conteoActual - 1);
+
+            } catch (error) {
+                alert("Error al procesar: " + error.message);
+                btn.innerText = "Aprobar y Enviar QR";
+                btn.disabled = false;
+            }
+        }
+
+        async function rechazarReserva(id) {
+            if(confirm("¿Seguro que querés borrar esta reserva? Liberará el cupo de la entrada.")){
+                await client.from('entradas').delete().eq('id', id);
+                cargarPendientes();
+            }
+        }
+    </script>
+</body>
+</html>
