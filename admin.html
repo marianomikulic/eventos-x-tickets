@@ -11,10 +11,10 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--fondo); color: white; margin: 0; padding: 20px; }
         
         /* Login */
-        #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .input-pin { background: var(--caja); border: 1px solid #333; color: white; padding: 15px; border-radius: 12px; width: 320px; text-align: center; margin-bottom: 20px; font-size: 14px;}
+        #login-screen { position: fixed; inset: 0; background: var(--fondo); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .input-pin { background: var(--caja); border: 1px solid #333; color: white; padding: 15px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; }
         .input-pin:focus { outline: none; border-color: var(--azul); }
-        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 320px; text-transform: uppercase; transition: 0.3s; }
+        .btn-pin { background: var(--azul); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; max-width: 320px; text-transform: uppercase; transition: 0.3s; box-sizing: border-box; }
 
         /* Panel Principal */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -37,6 +37,19 @@
         .btn-aprobar:hover { background: #059669; color: white; }
         .btn-rechazar { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.3s; }
         .btn-rechazar:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* --- RESPONSIVE DESIGN (ADAPTACIÓN A CELULARES) --- */
+        @media (max-width: 650px) {
+            /* Apilamos el encabezado */
+            .header { flex-direction: column; align-items: stretch; gap: 15px; }
+            .header-left { justify-content: space-between; width: 100%; }
+            .header > div:last-child { justify-content: space-between; width: 100%; }
+            
+            /* Apilamos la información y los botones de la tarjeta */
+            .ticket-card { flex-direction: column; align-items: stretch; gap: 15px; }
+            .action-buttons { flex-direction: column; width: 100%; margin-top: 5px; }
+            .btn-aprobar, .btn-rechazar { width: 100%; box-sizing: border-box; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -73,7 +86,6 @@
         window.onload = async () => {
             const pinGuardado = localStorage.getItem('pin_admin_x');
             if (pinGuardado) {
-                // Chequeo silencioso contra la base de datos
                 const { error } = await client.rpc('get_pendientes', { pin_seguridad: pinGuardado });
                 if (!error) {
                     iniciarPanel();
@@ -93,7 +105,6 @@
             btn.disabled = true;
             btn.style.opacity = "0.5";
 
-            // Intentamos traer datos usando el PIN ingresado
             const { error } = await client.rpc('get_pendientes', { pin_seguridad: inputVal });
 
             if (error) {
